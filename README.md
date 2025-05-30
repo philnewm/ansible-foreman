@@ -4,18 +4,16 @@
 
 Role description
 
-This role includes a vagrant based molecule testing setup as a submodule at `molecule/default`
+This role includes a vagrant based molecule testing setup as a submodule at `molecule/`
 
 ## Structure
 
 ```code
-📦 ansible-role-template
+📦 ansible-foreman
  ┣ 📂 defaults
  ┃ ┗ 📜 main.yml
  ┣ 📂 files
- ┃ ┗ 📜 file_placeholder.yml
- ┣ 📂 handlers
- ┃ ┗ 📜 main.yml
+ ┃ ┗ 📜 requirements.yml
  ┣ 📂 meta
  ┃ ┗ 📜 main.yml
  ┣ 📂 molecule
@@ -27,8 +25,6 @@ This role includes a vagrant based molecule testing setup as a submodule at `mol
  ┃ ┣ 📜 dependencies.yml
  ┃ ┣ 📜 absent.yml
  ┃ ┗ 📜 init.yml
- ┣ 📂 templates
- ┃ ┗ ⛩️ template.j2
  ┣ 📂 vars
  ┃ ┗ 📜 main.yml
  ┗ 🗒️ README.md
@@ -36,7 +32,7 @@ This role includes a vagrant based molecule testing setup as a submodule at `mol
 
 ```
 
-Describe and explain role structure. 
+Describe and explain role structure.
 
 ## Requirements
 
@@ -55,7 +51,7 @@ Elaborate external dependencies and how to use them.
 
 ## Dependencies
 
-List role ansible-galaxy dependencies - if any.
+List role Ansible-Galaxy dependencies - if any.
 
 ## Example Playbook
 
@@ -65,9 +61,9 @@ Add an example playbook
 ---
 
 tasks:
-  - name: Include ansible-role-template present
+  - name: Include ansible-foreman present
     ansible.builtin.include_role:
-      name: ansible-role-template
+      name: ansible-foreman
     vars:
       state: present
 
@@ -76,7 +72,7 @@ tasks:
 
 ## License
 
-Add license - if any.
+MIT
 
 ## Notes
 
@@ -91,4 +87,4 @@ molecule/default/verify.yml merge=ours
 
 ## Changes to role template
 
-* Add github action that flags empty directories on release creation
+* Add GitHub action that flags empty directories on release creation

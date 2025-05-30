@@ -12,7 +12,7 @@
     state: present
     extra_args: --user
 
-- name: Install Ansible for Debian
+- name: Install Ansible postgres dependency for Debian
   when: ansible_distribution == "Debian"
   ansible.builtin.apt:
     name: python3-psycopg2

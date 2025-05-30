@@ -1,0 +1,9 @@
+---
+
+roles:
+  - name: philnewm.gnome
+
+collections:
+  - name: community.general
+
+...

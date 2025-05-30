@@ -1,5 +1,9 @@
 ---
 
-# tests to verify role functionality
+# TODO test foreman api response
+# TODO test OSs present
+# TODO test subnets present
+# TODO test hostgroups present
+# TODO test hosts present
 
 ...

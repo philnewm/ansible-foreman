@@ -1,0 +1,121 @@
+---
+
+- name: Install packages
+  ansible.builtin.package:
+    name: "{{ required_packages[ansible_os_family] }}"
+    state: present
+
+- name: Set system hostname
+  ansible.builtin.hostname:
+    name: "{{ foreman_host_name }}"
+
+- name: Add hostname to /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    create: true
+    regexp: "^{{ foreman_host_name }}\\s+"
+    line: "{{ foreman_ip }} {{ foreman_host_name }} "
+    owner: "root"
+    group: "root"
+    mode: '0644'
+    state: present
+
+- name: Create user and database on debian beforehand
+  when: ansible_distribution == "Debian"
+  block:
+    - name: Install PostgreSQL server
+      ansible.builtin.apt:
+        name: postgresql
+        state: present
+        update_cache: true
+
+    - name: Ensure PostgreSQL is running
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+        enabled: true
+
+    - name: Ensure psycopg2 is installed
+      ansible.builtin.package:
+        name: python3-psycopg2
+        state: present
+
+    - name: Ensure 'foreman' DB user exists
+      become: true
+      become_user: postgres
+      community.postgresql.postgresql_user:
+        name: foreman
+        role_attr_flags: SUPERUSER
+        state: present
+
+    - name: Ensure 'foreman' database exists
+      become: true
+      become_user: postgres
+      community.postgresql.postgresql_db:
+        name: foreman
+        owner: foreman
+        state: present
+
+# TODO test with --no-enable-puppet
+- name: Install foreman
+  when: foreman_version != foreman_version_check
+  ansible.builtin.command:
+    cmd: >
+      foreman-installer
+      --foreman-initial-admin-username {{ foreman_default_user }}
+      --foreman-initial-admin-password {{ foreman_default_password }}
+      --enable-foreman-proxy
+      --foreman-proxy-ssl {{ foreman_proxy_ssl }}
+      --foreman-proxy-ssl-port {{ foreman_proxy_ssl_port }}
+      --foreman-proxy-tftp {{ foreman_proxy_tftp }}
+      --foreman-proxy-tftp-managed {{ foreman_proxy_tftp_managed }}
+      --foreman-proxy-tftp-servername {{ foreman_ip }}
+      --foreman-proxy-dns {{ foreman_proxy_dns }}
+      --foreman-proxy-http {{ foreman_proxy_http }}
+      --enable-foreman-plugin-ansible
+      --enable-foreman-proxy-plugin-ansible
+      --enable-foreman-plugin-remote-execution
+  register: foreman_install_result
+  changed_when: foreman_install_result.rc == 0
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Configure firewalld if available
+  when: "'firewalld.service' in ansible_facts.services"
+  block:
+    - name: Ensure firewalld is running and enabled
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Open HTTP service in firewalld permanently
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: true
+
+    - name: Open HTTPS service in firewalld permanently
+      ansible.posix.firewalld:
+        service: https
+        permanent: true
+        state: enabled
+        immediate: true
+
+    - name: Allow TFTP service in firewalld
+      ansible.posix.firewalld:
+        service: tftp
+        permanent: true
+        state: enabled
+        immediate: true
+
+- name: Ensure correct ownership of /var/lib/tftpboot
+  ansible.builtin.file:
+    path: /var/lib/tftpboot
+    owner: foreman-proxy
+    group: foreman-proxy
+    recurse: true
+
+...

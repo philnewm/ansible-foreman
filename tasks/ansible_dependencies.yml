@@ -1,0 +1,125 @@
+---
+
+- name: Ensure pip3 is installed
+  ansible.builtin.package:
+    name: python3-pip
+    state: present
+
+- name: Install Ansible
+  when: ansible_distribution != "Debian"
+  ansible.builtin.pip:
+    name: ansible
+    state: present
+    extra_args: --user
+
+- name: Install Ansible for Debian
+  when: ansible_distribution == "Debian"
+  ansible.builtin.apt:
+    name: python3-psycopg2
+    state: present
+
+- name: Copy requirements file
+  ansible.builtin.copy:
+    src: requirements.yml
+    dest: "{{ foreman_ansible_requirements_file }}"
+    owner: "{{ foreman_default_user }}"
+    group: "{{ foreman_default_user }}"
+    mode: '0644'
+
+- name: Install roles to custom path
+  community.general.ansible_galaxy_install:
+    type: both
+    requirements_file: "{{ foreman_ansible_requirements_file }}"
+    state: present
+  environment:
+    ANSIBLE_COLLECTIONS_PATH: "{{ foreman_ansible_collections_dir }}"
+    ANSIBLE_ROLES_PATH: "{{ foreman_ansible_roles_dir }}"
+
+- name: Ensure Ruby compile packages are available
+  ansible.builtin.package:
+    name: "{{ ruby_packages[ansible_os_family] }}"
+    state: present
+
+- name: Install hammer_cli_foreman_ansible Ruby gem
+  community.general.gem:
+    name: hammer_cli_foreman_ansible
+    state: present
+    user_install: false
+
+- name: Ensure hammer CLI module directory exists
+  ansible.builtin.file:
+    path: "/etc/hammer/cli.modules.d"
+    state: directory
+    mode: '0755'
+    owner: "root"
+    group: "root"
+
+- name: Enable hammer_ansible module
+  ansible.builtin.copy:
+    dest: "/etc/hammer/cli.modules.d/foreman_ansible.yml"
+    content: |
+      :foreman_ansible:
+        :enable_module: true
+    owner: "root"
+    group: "root"
+    mode: '0644'
+
+# TODO Fix on Debian12 - some manual changes might help
+# sudo mkdir -p /etc/ansible/roles
+# sudo chown -R foreman-proxy: /etc/ansible/roles
+# Add to :roles_path: /etc/ansible/roles `/etc/foreman-proxy/settings.d/ansible.yml`
+- name: Fetch ansible roles from smart-proxy
+  ansible.builtin.command:
+    cmd: >
+      hammer
+      --output json
+      -u {{ foreman_default_user }}
+      -p '{{ foreman_default_password }}'
+      ansible roles fetch
+      --proxy-id 1
+  register: fetched_roles
+  changed_when: false
+
+- name: Parse fetched role names
+  ansible.builtin.set_fact:
+    fetched_role_names: >-
+      {{
+        (fetched_roles.stdout | from_json)[0]['Ansible roles available to be imported'].values()
+        | map(attribute='Role Name') | list
+      }}
+
+- name: Get already imported roles
+  ansible.builtin.command:
+    cmd: >
+      hammer
+      --output json
+      -u {{ foreman_default_user }}
+      -p '{{ foreman_default_password }}'
+      ansible roles list
+  register: imported_roles
+  changed_when: false
+
+- name: Parse imported role names
+  ansible.builtin.set_fact:
+    imported_role_names: >-
+      {{
+        imported_roles.stdout | from_json | map(attribute='Name') | list
+      }}
+
+- name: Determine roles to import
+  ansible.builtin.set_fact:
+    roles_to_import: "{{ fetched_role_names | difference(imported_role_names) }}"
+
+- name: Import ansible roles from smart-proxy
+  ansible.builtin.command:
+    cmd: >
+      hammer
+      -u {{ foreman_default_user }}
+      -p '{{ foreman_default_password }}'
+      ansible roles import
+      --proxy-id 1
+  when: roles_to_import | length > 0
+  register: result
+  changed_when: result.rc == 0
+
+...

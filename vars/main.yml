@@ -1,9 +1,29 @@
 ---
 
-# vars file for ansible-role-template
+required_packages:
+  RedHat:
+    - foreman-installer
+    - rubygem-foreman_bootdisk
+    - rubygem-hammer_cli_foreman_bootdisk
+    - rubygem-hammer_cli_foreman_discovery
+  Debian:
+    - foreman-installer
+    - ruby-foreman-bootdisk
+    - ruby-hammer-cli-foreman-bootdisk
+    - ruby-hammer-cli-foreman-discovery
 
+ruby_packages:
+  RedHat:
+    - gcc
+    - make
+    - glibc-devel
+    - ruby-devel
+    - ruby
+  Debian:
+    - ruby
 
-# remove this placeholder
-ansible_role_template: "Default role name still in use."
+foreman_packages_command:
+  RedHat: "rpm -qa | grep -i foreman"
+  Debian: "dpkg -l | grep -i foreman"
 
 ...

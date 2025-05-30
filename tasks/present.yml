@@ -1,11 +1,38 @@
 ---
 
-# Install tasks
-# INFO larger roles should only use **include_tasks** here
+- name: Check if Foreman is running by calling API
+  ansible.builtin.uri:
+    url: "https://{{ foreman_host_name }}/api/statuses"
+    method: GET
+    user: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    return_content: true
+  register: foreman_api
+  failed_when: false
+  changed_when: false
 
+- name: Extract Foreman version
+  ansible.builtin.set_fact:
+    foreman_version: "{{ foreman_api.json.results.foreman.version | default('') }}"
 
-# INFO This task may be obsolete for your use-case
-- name: Gather package facts
-  ansible.builtin.package_facts:
+- name: Include dependencies
+  when: foreman_version != foreman_version_check
+  ansible.builtin.include_tasks:
+    file: "{{ ansible_os_family | lower }}_dependencies.yml"
+
+- name: Include install
+  when: foreman_version != foreman_version_check
+  ansible.builtin.include_tasks:
+    file: install.yml
+
+- name: Include ansible dependencies
+  ansible.builtin.include_tasks:
+    file: ansible_dependencies.yml
+
+- name: Include config
+  ansible.builtin.include_tasks:
+    file: config.yml
 
 ...

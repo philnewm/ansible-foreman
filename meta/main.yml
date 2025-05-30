@@ -1,11 +1,11 @@
 ---
 
 galaxy_info:
-  role_name: role_template
-  author: author_name
-  description: ansible-role-template description
+  role_name: foreman
+  author: philnewm
+  description: Set up and configure a foreman instance
 
-  license: some_license
+  license: MIT
 
   min_ansible_version: "2.1"
 

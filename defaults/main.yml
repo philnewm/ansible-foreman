@@ -1,7 +1,250 @@
 ---
 
-# Variables for ansible-role-template
+state: "present"
 
-state: present
+foreman_repositories_version: 3.14
+foreman_version_check: "{{ foreman_repositories_version }}.0"
+foreman_puppet_version: 8
+
+default_ubuntu_mirror: "http://de.archive.ubuntu.com/ubuntu"
+
+foreman_host_name: "default.subnet01"
+foreman_default_user: "vagrant"
+foreman_default_password: "vagrant"
+foreman_proxy_ssl: "true"
+foreman_proxy_ssl_port: 8443
+foreman_proxy_tftp: "true"
+foreman_proxy_tftp_managed: "true"
+foreman_ip: "{{ ansible_all_ipv4_addresses[0] }}"
+foreman_proxy_dns: "false"
+foreman_proxy_http: "true"
+foreman_cert_validation: "false"
+
+foreman_ansible_requirements_file: "/usr/share/ansible/requirements.yml"
+foreman_ansible_roles_dir: "/usr/share/ansible/roles/"
+foreman_ansible_collections_dir: "/usr/share/ansible/collections/"
+
+foreman_domains:
+  - domain_description: "subnet01"
+    domain_name: "subnet01"
+    domain_locations:
+      - "Default Location"
+    domain_organizations:
+      - "Default Organization"
+  - domain_description: "subnet02"
+    domain_name: "subnet02"
+    domain_locations:
+      - "Default Location"
+    domain_organizations:
+      - "Default Organization"
+
+foreman_oss:
+  - name: "AlmaLinux"
+    major: 9
+    minor: 5
+    description: "AlmaLinux 9.5"
+    family: "Redhat"
+    password_hash: "MD5"
+    architectures:
+      - "x86_64"
+    ptables:
+      - "Kickstart custom"
+    media:
+      - "AlmaLinux"
+    provisioning_templates:
+      - "Kickstart default"
+      - "Kickstart default finish"
+      - "Kickstart default PXEGrub2"
+      - "Linux host_init_config default"
+
+foreman_os_default_templates:
+  AlmaLinux9.5: 
+    - operatingsystem: "AlmaLinux 9.5"
+      provisioning_template: "Kickstart default"
+      template_kind: "provision"
+    - operatingsystem: "AlmaLinux 9.5"
+      provisioning_template: "Kickstart default finish"
+      template_kind: "finish"
+    - operatingsystem: "AlmaLinux 9.5"
+      provisioning_template: "Kickstart default PXEGrub2"
+      template_kind: "PXEGrub2"
+    - operatingsystem: "AlmaLinux 9.5"
+      provisioning_template: "Linux host_init_config default"
+      template_kind: "host_init_config"
+
+foreman_os_provisioning_templates:
+  AlmaLinux9.5: 
+    - operatingsystems:
+        - "AlmaLinux 9.5"
+      name: "Kickstart default"
+      kind: "provision"
+      locations:
+        - "Default Location"
+      organizations:
+        - "Default Organization"
+    - operatingsystems:
+        - "AlmaLinux 9.5"
+      name: "Kickstart default finish"
+      kind: "finish"
+      locations:
+        - "Default Location"
+      organizations:
+        - "Default Organization"
+    - operatingsystems:
+        - "AlmaLinux 9.5"
+      name: "Kickstart default PXEGrub2"
+      kind: "PXEGrub2"
+      locations:
+        - "Default Location"
+      organizations:
+        - "Default Organization"
+    - operatingsystems:
+        - "AlmaLinux 9.5"
+      name: "Linux host_init_config default"
+      kind: "host_init_config"
+      locations:
+        - "Default Location"
+      organizations:
+        - "Default Organization"
+
+foreman_subnets:
+  - name: "SubNet01"
+    descr: "SubNet01"
+    network_type: "IPv4"
+    network: "192.168.56.0"
+    cidr: 24
+    gateway: "192.168.56.1"
+    dns_primary: "192.168.56.1"
+    dns_secondary: ""
+    ipam: "Internal DB"
+    dhcp_start: "192.168.56.10"
+    dhcp_end: "192.168.56.99"
+    vlanid: 0
+    mtu: 1500
+    boot_mode: "Static"
+    remote_execution_proxies:
+      - "{{ foreman_host_name }}"
+    domains:
+      - "subnet01"
+    tftp_proxy: "{{ foreman_host_name }}"
+    domain_locations:
+      - "Default Location"
+    domain_organizations:
+      - "Default Organization"
+  - name: "SubNet02"
+    descr: "SubNet02"
+    network_type: "IPv4"
+    network: "192.168.2.0"
+    cidr: 24
+    gateway: "192.168.2.1"
+    dns_primary: "192.168.2.1"
+    dns_secondary: ""
+    ipam: "Internal DB"
+    dhcp_start: "192.168.2.10"
+    dhcp_end: "192.168.2.199"
+    vlanid: 1
+    mtu: 1500
+    boot_mode: "Static"
+    remote_execution_proxies:
+      - "{{ foreman_host_name }}"
+    domains:
+      - "subnet02"
+    tftp_proxy: "{{ foreman_host_name }}"
+    domain_locations:
+      - "Default Location"
+    domain_organizations:
+      - "Default Organization"
+
+foreman_host_groups:
+  - name: "Workstation"
+    description: "Desktop systems"
+    environment: "production"
+    puppet_proxy: "{{ foreman_host_name }}"
+    puppet_ca_proxy: "{{ foreman_host_name }}"
+    ansible_roles:
+      - philnewm.gnome
+    subnet: "SubNet02"
+    architecture: "x86_64"
+    operatingsystem: "AlmaLinux 9.5"
+    medium: "AlmaLinux"
+    ptable: "Kickstart custom"
+    pxe_loader: "Grub2 UEFI"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    parameters:
+      - name: "gnome_setup_state"
+        parameter_type: "string"
+        value: "present"
+
+foreman_hosts:
+  - name: "test-station.subnet02"
+    domain: "subnet02"
+    organization: "Default Organization"
+    location: "Default Location"
+    hostgroup: "Workstation"
+    environment: "production"
+    puppet_proxy: "{{ foreman_host_name }}"
+    puppet_ca_proxy: "{{ foreman_host_name }}"
+    architecture: "x86_64"
+    operatingsystem: "AlmaLinux 9.5"
+    build: true
+    media: "AlmaLinux"
+    ptable: "Kickstart custom"
+    pxe_loader: "Grub2 UEFI"
+    root_password: "changeme"  # Only gets set for new hosts
+    interfaces_attributes:
+      - type: "interface"
+        mac: "12:ab:34:cd:56:ef"
+        identifier: "eth1"
+        name: "test-station.subnet01"
+        domain: "subnet01"
+        subnet: "SubNet01"
+        ip: "192.168.56.105"
+        managed: true
+        primary: false
+        provision: true
+      - type: "interface"
+        mac: "12:ab:34:cd:56:ef"
+        identifier: "eth1.1"
+        name: "test-station.subnet02"
+        domain: "subnet02"
+        subnet: "SubNet02"
+        ip: "192.168.2.83"
+        managed: true
+        primary: true
+        virtual: true
+        execution: true
+        tag: 1
+        attached_to: "eth1"
+    parameters:
+      - name: "part_device"
+        parameter_type: "string"
+        value: "nvme0n1"
+      - name: "part_swap_size"
+        parameter_type: "integer"
+        value: 32768
+      - name: "part_root_percent"
+        parameter_type: "integer"
+        value: 40
+      - name: "part_home_percent"
+        parameter_type: "integer"
+        value: 60
+      - name: "part_fstype"
+        parameter_type: "string"
+        value: "xfs"
+      - name: "part_vgname"
+        parameter_type: "string"
+        value: "almalinux"
+      - name: "part_swap_name"
+        parameter_type: "string"
+        value: "swap"
+      - name: "part_root_name"
+        parameter_type: "string"
+        value: "root"
+      - name: "part_home_name"
+        parameter_type: "string"
+        value: "home"
 
 ...

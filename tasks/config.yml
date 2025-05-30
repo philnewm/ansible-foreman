@@ -1,0 +1,164 @@
+---
+
+- name: Ensure the 'requests' module is installed
+  ansible.builtin.pip:
+    name: requests
+
+- name: "Create OS {{ item.description }}"
+  loop: "{{ foreman_oss }}"
+  theforeman.foreman.operatingsystem:
+    name: "{{ item.name }}"
+    major: "{{ item.major }}"
+    minor: "{{ item.minor }}"
+    description: "{{ item.description }}"
+    family: "{{ item.family }}"
+    password_hash: "{{ item.password_hash }}"
+    architectures: "{{ item.architectures }}"
+    ptables: "{{ item.ptables }}"
+    media: "{{ item.media }}"
+    provisioning_templates: "{{ item.provisioning_templates }}"
+    state: present
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "https://{{ foreman_host_name }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+  diff: true
+
+- name: Set default provisioning templates for AlmaLinux 9.5
+  loop: "{{ foreman_os_default_templates['AlmaLinux9.5'] }}"
+  theforeman.foreman.os_default_template:
+    operatingsystem: "{{ item.operatingsystem }}"
+    provisioning_template: "{{ item.provisioning_template }}"
+    template_kind: "{{ item.template_kind }}"
+    state: "present"
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "https://{{ foreman_host_name }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+
+- name: Set provisioning templates for AlmaLinux 9.5
+  loop: "{{ foreman_os_provisioning_templates['AlmaLinux9.5'] }}"
+  theforeman.foreman.provisioning_template:
+    operatingsystems: "{{ item.operatingsystems }}"
+    name: "{{ item.name }}"
+    kind: "{{ item.kind }}"
+    locations: "{{ item.locations }}"
+    organizations: "{{ item.organizations }}"
+    state: "present"
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "https://{{ foreman_host_name }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+
+- name: "Create {{ item.domain_name }}"
+  loop: "{{ foreman_domains }}"
+  theforeman.foreman.domain:
+    description: "{{ item.domain_description }}"
+    name: "{{ item.domain_name }}"
+    locations: "{{ item.domain_locations }}"
+    organizations: "{{ item.domain_organizations }}"
+    state: "present"
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "https://{{ foreman_host_name }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+
+- name: "Create Subnet {{ item.name }}"
+  loop: "{{ foreman_subnets }}"
+  theforeman.foreman.subnet:
+    name: "{{ item.name }}"
+    description: "{{ item.descr }}"
+    network_type: "{{ item.network_type }}"
+    network: "{{ item.network }}"
+    cidr: "{{ item.cidr }}"
+    gateway: "{{ item.gateway }}"
+    dns_primary: "{{ item.dns_primary }}"
+    dns_secondary: "{{ item.dns_secondary }}"
+    ipam: "{{ item.ipam }}"
+    from_ip: "{{ item.dhcp_start }}"
+    to_ip: "{{ item.dhcp_end }}"
+    vlanid: "{{ item.vlanid }}"
+    mtu: "{{ item.mtu }}"
+    boot_mode: "{{ item.boot_mode }}"
+    remote_execution_proxies: "{{ item.remote_execution_proxies }}"
+    domains: "{{ item.domains }}"
+    tftp_proxy: "{{ item.tftp_proxy }}"
+    locations: "{{ item.domain_locations }}"
+    organizations: "{{ item.domain_organizations }}"
+    state: present
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "https://{{ foreman_host_name }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+
+- name: Create host groups
+  loop: "{{ foreman_host_groups }}"
+  theforeman.foreman.hostgroup:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    environment: "{{ item.environment }}"
+    puppet_proxy: "{{ item.puppet_proxy }}"
+    puppet_ca_proxy: "{{ item.puppet_ca_proxy }}"
+    ansible_roles: "{{ item.ansible_roles }}"
+    subnet: "{{ item.subnet }}"
+    architecture: "{{ item.architecture }}"
+    operatingsystem: "{{ item.operatingsystem }}"
+    medium: "{{ item.medium }}"
+    ptable: "{{ item.ptable }}"
+    pxe_loader: "{{ item.pxe_loader }}"
+    locations: "{{ item.locations }}"
+    organizations: "{{ item.organizations }}"
+    parameters: "{{ item.parameters }}"
+    state: present
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "https://{{ foreman_host_name }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+
+- name: Get current hosts
+  theforeman.foreman.host_info:
+    location: "Default Location"
+    organization: "Default Organization"
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "https://{{ foreman_host_name }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+  register: present_hosts
+
+# INFO `root_pass` is a write only parameter and will otherwise cause changes on every run
+- name: Extract list of existing hostnames
+  ansible.builtin.set_fact:
+    existing_hostnames: "{{ present_hosts.hosts | map(attribute='name') | list }}"
+
+- name: "Create host {{ item.name }}"
+  loop: "{{ foreman_hosts }}"
+  theforeman.foreman.host:
+    name: "{{ item.name }}"
+    domain: "{{ item.domain }}"
+    organization: "{{ item.organization }}"
+    location: "{{ item.location }}"
+    hostgroup: "{{ item.hostgroup }}"
+    environment: "{{ item.environment }}"
+    puppet_proxy: "{{ item.puppet_proxy }}"
+    puppet_ca_proxy: "{{ item.puppet_ca_proxy }}"
+    architecture: "{{ item.architecture }}"
+    operatingsystem: "{{ item.operatingsystem }}"
+    build: "{{ item.build }}"
+    media: "{{ item.media }}"
+    ptable: "{{ item.ptable }}"
+    pxe_loader: "{{ item.pxe_loader }}"
+    # INFO Check required for idempotence
+    root_pass: >-
+      {{
+        (item.name not in existing_hostnames)
+        | ternary(item.root_password, omit)
+      }}
+    interfaces_attributes: "{{ item.interfaces_attributes }}"
+    parameters: "{{ item.parameters }}"
+    state: present
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "https://{{ foreman_host_name }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+
+...

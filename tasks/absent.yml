@@ -1,11 +1,18 @@
 ---
 
-# Uninstall and cleanup tasks
+# INFO https://community.theforeman.org/t/documentation-full-and-clean-uninstall-process/22459/5
+- name: Uninstall Foreman
+  ansible.builtin.debug:
+    msg: "Research how to uninstall foreman"
 
+- name: Get foreman services
+  ansible.builtin.shell:
+    cmd: "{{ foreman_packages_command[ansible_os_family] }}"
+  register: foreman_services
+  changed_when: false
 
-- name: Remove unused dependencies
-  become: true
-  ansible.builtin.package:
-    autoremove: true
+- name: These servcies would need clean uninstalls
+  ansible.builtin.debug:
+    var: foreman_services.stdout_lines
 
 ...

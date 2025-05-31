@@ -38,6 +38,16 @@ foreman_domains:
     domain_organizations:
       - "Default Organization"
 
+# INFO almalinux changed path from 9.5 to 9 so url set to $major
+foreman_install_media:
+  - name: "AlmaLinux"
+    path: "https://repo.almalinux.org/almalinux/$major/BaseOS/$arch/os/"
+    os_family: "Redhat"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+
 foreman_oss:
   - name: "AlmaLinux"
     major: 9

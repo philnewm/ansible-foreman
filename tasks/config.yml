@@ -4,6 +4,20 @@
   ansible.builtin.pip:
     name: requests
 
+- name: "Create Installation Media"
+  loop: "{{ foreman_install_media }}"
+  theforeman.foreman.installation_medium:
+    name: "{{ item.name }}"
+    path: "{{ item.path }}"
+    os_family: "{{ item.os_family }}"
+    locations: "{{ item.locations }}"
+    organizations: "{{ item.organizations }}"
+    state: present
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "https://{{ foreman_host_name }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+
 - name: "Create Operating System"
   loop: "{{ foreman_oss }}"
   theforeman.foreman.operatingsystem:

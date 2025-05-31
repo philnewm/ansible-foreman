@@ -7,11 +7,12 @@
 
 - name: Get foreman services
   ansible.builtin.shell:
-    cmd: "{{ foreman_packages_command[ansible_os_family] }}"
+    cmd: "{{ foreman_packages_command[ansible_os_family] }} || true"
   register: foreman_services
   changed_when: false
 
 - name: These servcies would need clean uninstalls
+  when: foreman_services.stdout_lines
   ansible.builtin.debug:
     var: foreman_services.stdout_lines
 

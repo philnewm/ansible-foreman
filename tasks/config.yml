@@ -4,7 +4,7 @@
   ansible.builtin.pip:
     name: requests
 
-- name: "Create OS {{ item.description }}"
+- name: "Create Operating System"
   loop: "{{ foreman_oss }}"
   theforeman.foreman.operatingsystem:
     name: "{{ item.name }}"
@@ -22,7 +22,6 @@
     server_url: "https://{{ foreman_host_name }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
-  diff: true
 
 - name: Set default provisioning templates for AlmaLinux 9.5
   loop: "{{ foreman_os_default_templates['AlmaLinux9.5'] }}"
@@ -50,7 +49,7 @@
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
-- name: "Create {{ item.domain_name }}"
+- name: "Create Domains"
   loop: "{{ foreman_domains }}"
   theforeman.foreman.domain:
     description: "{{ item.domain_description }}"
@@ -63,7 +62,7 @@
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
-- name: "Create Subnet {{ item.name }}"
+- name: "Create Subnets"
   loop: "{{ foreman_subnets }}"
   theforeman.foreman.subnet:
     name: "{{ item.name }}"
@@ -130,7 +129,7 @@
   ansible.builtin.set_fact:
     existing_hostnames: "{{ present_hosts.hosts | map(attribute='name') | list }}"
 
-- name: "Create host {{ item.name }}"
+- name: "Create hosts"
   loop: "{{ foreman_hosts }}"
   theforeman.foreman.host:
     name: "{{ item.name }}"

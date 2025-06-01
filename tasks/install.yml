@@ -75,6 +75,8 @@
       --enable-foreman-plugin-ansible
       --enable-foreman-proxy-plugin-ansible
       --enable-foreman-plugin-remote-execution
+      --enable-foreman-plugin-bootdisk
+      --enable-foreman-plugin-templates
   register: foreman_install_result
   changed_when: foreman_install_result.rc == 0
 

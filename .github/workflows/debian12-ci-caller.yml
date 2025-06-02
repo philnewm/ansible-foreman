@@ -10,6 +10,7 @@ on:
       - '**/*.md'
       - .gitignore
       - ./meta/main.yml
+      - LICENSE
 
   pull_request:
     branches: [ "main" ]

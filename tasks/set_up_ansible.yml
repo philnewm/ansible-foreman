@@ -35,6 +35,10 @@
     ANSIBLE_COLLECTIONS_PATH: "{{ foreman_ansible_collections_dir }}"
     ANSIBLE_ROLES_PATH: "{{ foreman_ansible_roles_dir }}"
 
+- name: Include role dependecnies
+  ansible.builtin.include_tasks:
+    file: ansible_role_dependencies.yml
+
 - name: Ensure Ruby compile packages are available
   ansible.builtin.package:
     name: "{{ ruby_packages[ansible_os_family] }}"
@@ -121,5 +125,38 @@
   when: roles_to_import | length > 0
   register: result
   changed_when: result.rc == 0
+
+- name: Set default users
+  when: foreman_default_users_src
+  block:
+    - name: Copy default users
+      ansible.builtin.copy:
+        src: "{{ foreman_default_users_src }}"
+        dest: "{{ foreman_default_users_file }}"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_gid }}"
+        mode: '0644'
+
+    - name: Assign default users file path
+      theforeman.foreman.global_parameter:
+        name: "local_users_file_path"
+        parameter_type: "string"
+        value: "{{ foreman_default_users_file }}"
+        state: present
+        validate_certs: "{{ foreman_cert_validation }}"
+        server_url: "https://{{ foreman_host_name }}"
+        username: "{{ foreman_default_user }}"
+        password: "{{ foreman_default_password }}"
+
+    - name: Assign public key file path
+      theforeman.foreman.global_parameter:
+        name: "local_users_file_path"
+        parameter_type: "string"
+        value: "{{ foreman_pub_key_path }}"
+        state: present
+        validate_certs: "{{ foreman_cert_validation }}"
+        server_url: "https://{{ foreman_host_name }}"
+        username: "{{ foreman_default_user }}"
+        password: "{{ foreman_default_password }}"
 
 ...

@@ -29,7 +29,7 @@
 
 - name: Include ansible dependencies
   ansible.builtin.include_tasks:
-    file: ansible_dependencies.yml
+    file: set_up_ansible.yml
 
 - name: Include config
   ansible.builtin.include_tasks:

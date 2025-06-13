@@ -5,6 +5,7 @@ state: "present"
 foreman_repositories_version: 3.14
 foreman_version_check: "{{ foreman_repositories_version }}.0"
 foreman_puppet_version: 8
+foreman_pub_key_path: "/usr/share/foreman-proxy/.ssh/id_rsa_foreman_proxy.pub" 
 
 default_ubuntu_mirror: "http://de.archive.ubuntu.com/ubuntu"
 
@@ -20,6 +21,8 @@ foreman_proxy_dns: "false"
 foreman_proxy_http: "true"
 foreman_cert_validation: "false"
 
+foreman_default_users_src: ""
+foreman_default_users_file: "/usr/share/ansible/default_users.yml"
 foreman_ansible_requirements_file: "/usr/share/ansible/requirements.yml"
 foreman_ansible_roles_dir: "/usr/share/ansible/roles/"
 foreman_ansible_collections_dir: "/usr/share/ansible/collections/"
@@ -172,6 +175,7 @@ foreman_host_groups:
     puppet_proxy: "{{ foreman_host_name }}"
     puppet_ca_proxy: "{{ foreman_host_name }}"
     ansible_roles:
+      - philnewm.local_users
       - philnewm.gnome
     subnet: "SubNet02"
     architecture: "x86_64"

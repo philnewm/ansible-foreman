@@ -7,23 +7,17 @@
     recurse: false
   register: found_roles
 
-- name: Check for requirements files in each role
+- name: Build roles_with_requirements structure
   ansible.builtin.set_fact:
     roles_with_requirements: >-
-      {{
-        found_roles.files | map(attribute='path') | map('basename') | map('extract_requirements', foreman_ansible_roles_dir)
-      }}
-  vars:
-    # Filter to extract requirements paths
-    extract_requirements: |
-      {% filter from_yaml %}
-      {% for role in value %}
-      - role: {{ role }}
-        requirements_txt: {{ foreman_ansible_roles_dir }}/{{ role }}/requirements.txt
-        requirements_yml: {{ foreman_ansible_roles_dir }}/{{ role }}/requirements.yml
-      {% endfor %}
-      {% endfilter %}
-    value: "{{ found_roles.files | map(attribute='path') | map('basename') | list }}"
+      {{ roles_with_requirements | default([]) + [
+        {
+          'role': item | basename,
+          'requirements_txt': item + '/requirements.txt',
+          'requirements_yml': item + '/requirements.yml'
+        }
+      ] }}
+  loop: "{{ found_roles.files | map(attribute='path') | list }}"
 
 - name: Ensure requirements.txt is present for each role
   ansible.builtin.stat:

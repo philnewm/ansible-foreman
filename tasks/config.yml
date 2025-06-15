@@ -6,6 +6,8 @@
 
 - name: "Create Installation Media"
   loop: "{{ foreman_install_media }}"
+  loop_control:
+    label: "{{ item.name }}"
   theforeman.foreman.installation_medium:
     name: "{{ item.name }}"
     path: "{{ item.path }}"
@@ -20,6 +22,8 @@
 
 - name: "Create Operating System"
   loop: "{{ foreman_oss }}"
+  loop_control:
+    label: "{{ item.description }}"
   theforeman.foreman.operatingsystem:
     name: "{{ item.name }}"
     major: "{{ item.major }}"
@@ -39,6 +43,8 @@
 
 - name: Set default provisioning templates for AlmaLinux 9.5
   loop: "{{ foreman_os_default_templates['AlmaLinux9.5'] }}"
+  loop_control:
+    label: "{{ item.provisioning_template }}"
   theforeman.foreman.os_default_template:
     operatingsystem: "{{ item.operatingsystem }}"
     provisioning_template: "{{ item.provisioning_template }}"
@@ -51,6 +57,8 @@
 
 - name: Set provisioning templates for AlmaLinux 9.5
   loop: "{{ foreman_os_provisioning_templates['AlmaLinux9.5'] }}"
+  loop_control:
+    label: "{{ item.name }}"
   theforeman.foreman.provisioning_template:
     operatingsystems: "{{ item.operatingsystems }}"
     name: "{{ item.name }}"
@@ -65,6 +73,8 @@
 
 - name: "Create Domains"
   loop: "{{ foreman_domains }}"
+  loop_control:
+    label: "{{ item.domain_name }}"
   theforeman.foreman.domain:
     description: "{{ item.domain_description }}"
     name: "{{ item.domain_name }}"
@@ -78,6 +88,8 @@
 
 - name: "Create Subnets"
   loop: "{{ foreman_subnets }}"
+  loop_control:
+    label: "{{ item.name }}"
   theforeman.foreman.subnet:
     name: "{{ item.name }}"
     description: "{{ item.descr }}"
@@ -106,6 +118,8 @@
 
 - name: Create host groups
   loop: "{{ foreman_host_groups }}"
+  loop_control:
+    label: "{{ item.name }}"
   theforeman.foreman.hostgroup:
     name: "{{ item.name }}"
     description: "{{ item.description }}"
@@ -145,6 +159,8 @@
 
 - name: "Create hosts"
   loop: "{{ foreman_hosts }}"
+  loop_control:
+    label: "{{ item.name }}"
   theforeman.foreman.host:
     name: "{{ item.name }}"
     domain: "{{ item.domain }}"

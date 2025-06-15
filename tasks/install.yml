@@ -1,15 +1,18 @@
 ---
 
 - name: Install packages
+  become: true
   ansible.builtin.package:
     name: "{{ required_packages[ansible_os_family] }}"
     state: present
 
 - name: Set system hostname
+  become: true
   ansible.builtin.hostname:
     name: "{{ foreman_host_name }}"
 
 - name: Add hostname to /etc/hosts
+  become: true
   ansible.builtin.lineinfile:
     path: /etc/hosts
     create: true
@@ -24,18 +27,21 @@
   when: ansible_distribution == "Debian"
   block:
     - name: Install PostgreSQL server
+      become: true
       ansible.builtin.apt:
         name: postgresql
         state: present
         update_cache: true
 
     - name: Ensure PostgreSQL is running
+      become: true
       ansible.builtin.service:
         name: postgresql
         state: started
         enabled: true
 
     - name: Ensure psycopg2 is installed
+      become: true
       ansible.builtin.package:
         name: python3-psycopg2
         state: present
@@ -58,6 +64,7 @@
 
 # TODO test with --no-enable-puppet
 - name: Install foreman
+  become: true
   when: foreman_version != foreman_version_check
   ansible.builtin.command:
     cmd: >
@@ -87,33 +94,23 @@
   when: "'firewalld.service' in ansible_facts.services"
   block:
     - name: Ensure firewalld is running and enabled
+      become: true
       ansible.builtin.service:
         name: firewalld
         state: started
         enabled: true
 
-    - name: Open HTTP service in firewalld permanently
+    - name: Allow services in firewalld permanently
+      become: true
+      loop: "{{ foreman_fw_allowed_services }}"
       ansible.posix.firewalld:
-        service: http
-        permanent: true
-        state: enabled
-        immediate: true
-
-    - name: Open HTTPS service in firewalld permanently
-      ansible.posix.firewalld:
-        service: https
-        permanent: true
-        state: enabled
-        immediate: true
-
-    - name: Allow TFTP service in firewalld
-      ansible.posix.firewalld:
-        service: tftp
+        service: "{{ item }}"
         permanent: true
         state: enabled
         immediate: true
 
 - name: Ensure correct ownership of /var/lib/tftpboot
+  become: true
   ansible.builtin.file:
     path: /var/lib/tftpboot
     owner: foreman-proxy

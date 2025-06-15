@@ -8,6 +8,7 @@
   register: found_roles
 
 - name: Build roles_with_requirements structure
+  loop: "{{ found_roles.files | map(attribute='path') | list }}"
   ansible.builtin.set_fact:
     roles_with_requirements: >-
       {{ roles_with_requirements | default([]) + [
@@ -17,33 +18,49 @@
           'requirements_yml': item + '/requirements.yml'
         }
       ] }}
-  loop: "{{ found_roles.files | map(attribute='path') | list }}"
 
 - name: Ensure requirements.txt is present for each role
+  loop: "{{ roles_with_requirements }}"
+  loop_control:
+    label: "{{ item.role }}"
   ansible.builtin.stat:
     path: "{{ item.requirements_txt }}"
-  loop: "{{ roles_with_requirements }}"
   register: requirements_txt_files
 
 - name: Ensure requirements.yml is present for each role
+  loop: "{{ roles_with_requirements }}"
+  loop_control:
+    label: "{{ item.role }}"
   ansible.builtin.stat:
     path: "{{ item.requirements_yml }}"
-  loop: "{{ roles_with_requirements }}"
   register: requirements_yml_files
 
 - name: Install Python dependencies for each role
+  when: item.stat.exists and ansible_distribution != "Debian"
+  loop: "{{ requirements_txt_files.results }}"
+  loop_control:
+    label: "{{ item.item.role }}"
   ansible.builtin.pip:
     requirements: "{{ item.item.requirements_txt }}"
+
+- name: Install Python dependencies debian
+  when: item.stat.exists and ansible_distribution != "Debian"
   loop: "{{ requirements_txt_files.results }}"
-  when: item.stat.exists
+  loop_control:
+    label: "{{ item.item.role }}"
+  ansible.builtin.pip:
+    requirements: "{{ item.item.requirements_txt }}"
 
 - name: Install Ansible Galaxy dependencies for each role
+  become: true
+  when: item.stat.exists
+  loop: "{{ requirements_yml_files.results }}"
+  loop_control:
+    label: "{{ item.item.role }}"
   community.general.ansible_galaxy_install:
     type: both
     requirements_file: "{{ item.item.requirements_yml }}"
     state: present
-  loop: "{{ requirements_yml_files.results }}"
-  when: item.stat.exists
   environment:
     ANSIBLE_COLLECTIONS_PATH: "{{ foreman_ansible_collections_dir }}"
     ANSIBLE_ROLES_PATH: "{{ foreman_ansible_roles_dir }}"

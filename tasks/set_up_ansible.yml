@@ -1,24 +1,27 @@
 ---
 
 - name: Ensure pip3 is installed
+  become: true
   ansible.builtin.package:
     name: python3-pip
     state: present
 
 - name: Install Ansible
+  become: true
   when: ansible_distribution != "Debian"
   ansible.builtin.pip:
     name: ansible
     state: present
-    extra_args: --user
 
 - name: Install Ansible postgres dependency for Debian
+  become: true
   when: ansible_distribution == "Debian"
   ansible.builtin.apt:
     name: python3-psycopg2
     state: present
 
 - name: Copy requirements file
+  become: true
   ansible.builtin.copy:
     src: requirements.yml
     dest: "{{ foreman_ansible_requirements_file }}"
@@ -27,6 +30,7 @@
     mode: '0644'
 
 - name: Install roles to custom path
+  become: true
   community.general.ansible_galaxy_install:
     type: both
     requirements_file: "{{ foreman_ansible_requirements_file }}"
@@ -35,22 +39,25 @@
     ANSIBLE_COLLECTIONS_PATH: "{{ foreman_ansible_collections_dir }}"
     ANSIBLE_ROLES_PATH: "{{ foreman_ansible_roles_dir }}"
 
-- name: Include role dependecnies
+- name: Include role dependencies
   ansible.builtin.include_tasks:
     file: ansible_role_dependencies.yml
 
 - name: Ensure Ruby compile packages are available
+  become: true
   ansible.builtin.package:
     name: "{{ ruby_packages[ansible_os_family] }}"
     state: present
 
 - name: Install hammer_cli_foreman_ansible Ruby gem
+  become: true
   community.general.gem:
     name: hammer_cli_foreman_ansible
     state: present
     user_install: false
 
 - name: Ensure hammer CLI module directory exists
+  become: true
   ansible.builtin.file:
     path: "/etc/hammer/cli.modules.d"
     state: directory
@@ -59,6 +66,7 @@
     group: "root"
 
 - name: Enable hammer_ansible module
+  become: true
   ansible.builtin.copy:
     dest: "/etc/hammer/cli.modules.d/foreman_ansible.yml"
     content: |
@@ -130,6 +138,7 @@
   when: foreman_default_users_src
   block:
     - name: Copy default users
+      become: true
       ansible.builtin.copy:
         src: "{{ foreman_default_users_src }}"
         dest: "{{ foreman_default_users_file }}"
@@ -137,22 +146,14 @@
         group: "{{ ansible_user_gid }}"
         mode: '0644'
 
-    - name: Assign default users file path
+    - name: Assign global parameters
+      loop: "{{ foreman_global_params }}"
+      loop_control:
+        label: "{{ item.name }}"
       theforeman.foreman.global_parameter:
-        name: "local_users_file_path"
-        parameter_type: "string"
-        value: "{{ foreman_default_users_file }}"
-        state: present
-        validate_certs: "{{ foreman_cert_validation }}"
-        server_url: "https://{{ foreman_host_name }}"
-        username: "{{ foreman_default_user }}"
-        password: "{{ foreman_default_password }}"
-
-    - name: Assign public key file path
-      theforeman.foreman.global_parameter:
-        name: "local_users_file_path"
-        parameter_type: "string"
-        value: "{{ foreman_pub_key_path }}"
+        name: "{{ item.name }}"
+        parameter_type: "{{ item.parameter_type }}"
+        value: "{{ item.value }}"
         state: present
         validate_certs: "{{ foreman_cert_validation }}"
         server_url: "https://{{ foreman_host_name }}"

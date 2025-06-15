@@ -5,9 +5,24 @@ state: "present"
 foreman_repositories_version: 3.14
 foreman_version_check: "{{ foreman_repositories_version }}.0"
 foreman_puppet_version: 8
-foreman_pub_key_path: "/usr/share/foreman-proxy/.ssh/id_rsa_foreman_proxy.pub" 
 
 default_ubuntu_mirror: "http://de.archive.ubuntu.com/ubuntu"
+
+foreman_fw_allowed_services:
+  - http
+  - https
+  - tftp
+
+foreman_global_params:
+  - name: "local_users_file_path"
+    parameter_type: "string"
+    value: "/usr/share/ansible/default_users.yml"
+  - name: "local_users_file_path"
+    parameter_type: "string"
+    value: "/usr/share/foreman-proxy/.ssh/id_rsa_foreman_proxy.pub"
+  - name: "default_desktop_user"
+    parameter_type: "string"
+    value: "philnewm"
 
 foreman_host_name: "default.subnet01"
 foreman_default_user: "vagrant"
@@ -22,7 +37,6 @@ foreman_proxy_http: "true"
 foreman_cert_validation: "false"
 
 foreman_default_users_src: ""
-foreman_default_users_file: "/usr/share/ansible/default_users.yml"
 foreman_ansible_requirements_file: "/usr/share/ansible/requirements.yml"
 foreman_ansible_roles_dir: "/usr/share/ansible/roles/"
 foreman_ansible_collections_dir: "/usr/share/ansible/collections/"

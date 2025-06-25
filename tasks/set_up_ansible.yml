@@ -10,7 +10,7 @@
   become: true
   when: ansible_distribution != "Debian"
   ansible.builtin.pip:
-    name: ansible
+    name: "{{ ansible_python_packages }}"
     state: present
 
 - name: Install Ansible postgres dependency for Debian
@@ -20,28 +20,32 @@
     name: python3-psycopg2
     state: present
 
-- name: Copy requirements file
-  become: true
-  ansible.builtin.copy:
-    src: requirements.yml
-    dest: "{{ foreman_ansible_requirements_file }}"
-    owner: "{{ foreman_default_user }}"
-    group: "{{ foreman_default_user }}"
-    mode: '0644'
 
-- name: Install roles to custom path
-  become: true
-  community.general.ansible_galaxy_install:
-    type: both
-    requirements_file: "{{ foreman_ansible_requirements_file }}"
-    state: present
-  environment:
-    ANSIBLE_COLLECTIONS_PATH: "{{ foreman_ansible_collections_dir }}"
-    ANSIBLE_ROLES_PATH: "{{ foreman_ansible_roles_dir }}"
+- name: Set up ansible roles
+  when: foreman_ansible_requirements_file_src is defined
+  block:
+    - name: Copy requirements file
+      become: true
+      ansible.builtin.copy:
+        src: "{{ foreman_ansible_requirements_file_src }}"
+        dest: "{{ foreman_ansible_requirements_file_dest }}"
+        owner: "{{ foreman_default_user }}"
+        group: "{{ foreman_default_user }}"
+        mode: '0644'
 
-- name: Include role dependencies
-  ansible.builtin.include_tasks:
-    file: ansible_role_dependencies.yml
+    - name: Install roles to custom path
+      become: true
+      community.general.ansible_galaxy_install:
+        type: both
+        requirements_file: "{{ foreman_ansible_requirements_file_dest }}"
+        state: present
+      environment:
+        ANSIBLE_COLLECTIONS_PATH: "{{ foreman_ansible_collections_dir }}"
+        ANSIBLE_ROLES_PATH: "{{ foreman_ansible_roles_dir }}"
+
+    - name: Include role dependencies
+      ansible.builtin.include_tasks:
+        file: ansible_role_dependencies.yml
 
 - name: Ensure Ruby compile packages are available
   become: true
@@ -135,13 +139,13 @@
   changed_when: result.rc == 0
 
 - name: Set default users
-  when: foreman_default_users_src
+  when: foreman_default_users_src is defined
   block:
     - name: Copy default users
       become: true
       ansible.builtin.copy:
         src: "{{ foreman_default_users_src }}"
-        dest: "{{ foreman_default_users_file }}"
+        dest: "{{ foreman_default_users_file_dest }}"
         owner: "{{ ansible_user_id }}"
         group: "{{ ansible_user_gid }}"
         mode: '0644'

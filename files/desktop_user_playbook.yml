@@ -1,0 +1,38 @@
+---
+
+- hosts: all
+  pre_tasks:
+    - name: Display all parameters known for the Foreman host
+      debug:
+        var: foreman
+      tags:
+        - always
+  tasks:
+    - name: Apply roles
+      ansible.builtin.include_role:
+        name: "{{ role }}"
+      tags:
+        - always
+      loop: "{{ foreman_ansible_roles }}"
+      loop_control:
+        loop_var: role
+
+    - name: Include users vars
+      ansible.builtin.include_vars:
+        file: "{{ local_users_file_path }}"
+
+    - name: Get desktop users
+      ansible.builtin.set_fact:
+        desktop_users: "{{ users | selectattr('desktop', 'equalto', true) | map(attribute='name') | list }}"
+
+    - name: Configure Gnome for desktop users
+      loop: "{{ desktop_users }}"
+      loop_control:
+        loop_var: desktop_user
+      ansible.builtin.include_role:
+        name: philnewm.gnome_user_config
+      vars:
+        state: present
+        user: "{{ desktop_user }}"
+
+...

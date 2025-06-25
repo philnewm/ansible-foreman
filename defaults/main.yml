@@ -20,9 +20,6 @@ foreman_global_params:
   - name: "local_users_file_path"
     parameter_type: "string"
     value: "/usr/share/foreman-proxy/.ssh/id_rsa_foreman_proxy.pub"
-  - name: "default_desktop_user"
-    parameter_type: "string"
-    value: "philnewm"
 
 foreman_host_name: "default.subnet01"
 foreman_default_user: "vagrant"
@@ -36,10 +33,22 @@ foreman_proxy_dns: "false"
 foreman_proxy_http: "true"
 foreman_cert_validation: "false"
 
-foreman_default_users_src: ""
-foreman_ansible_requirements_file: "/usr/share/ansible/requirements.yml"
+foreman_default_users_src: "default_users.yml"
+foreman_default_users_file_dest: "/usr/share/ansible/default_users.yml"
+foreman_ansible_requirements_file_src: "requirements.yml"
+foreman_ansible_requirements_file_dest: "/usr/share/ansible/requirements.yml"
 foreman_ansible_roles_dir: "/usr/share/ansible/roles/"
 foreman_ansible_collections_dir: "/usr/share/ansible/collections/"
+
+foreman_job_templates:
+  - name: "Ansible Roles - Ansible Desktop Users"
+    description: "Run Ansible roles per user"
+    audit_comment: "Add desktop user playbook"
+    provider_type: "Ansible"
+    job_category: "Ansible Playbook"
+    snippet: false
+    control_node_source: "files/desktop_user_playbook.yml"
+    file_name: "/tmp/desktop_user_playbook.yml"
 
 foreman_domains:
   - domain_description: "subnet01"
@@ -202,9 +211,12 @@ foreman_host_groups:
     organizations:
       - "Default Organization"
     parameters:
-      - name: "gnome_setup_state"
+      - name: "state"
         parameter_type: "string"
         value: "present"
+      - name: "remote_execution_ssh_user"
+        parameter_type: string
+        value: "config-manager"
 
 foreman_hosts:
   - name: "test-station.subnet02"

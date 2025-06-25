@@ -3,6 +3,7 @@
 roles:
   - name: philnewm.gnome
   - name: philnewm.local_users
+  - name: philnewm.gnome_user_config
 
 collections:
   - name: community.general

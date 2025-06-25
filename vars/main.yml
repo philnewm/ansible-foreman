@@ -22,6 +22,10 @@ ruby_packages:
   Debian:
     - ruby
 
+ansible_python_packages:
+  - ansible
+  - requests
+
 foreman_packages_command:
   RedHat: "rpm -qa | grep -i foreman"
   Debian: "dpkg -l | grep -i foreman"

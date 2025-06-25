@@ -81,7 +81,10 @@
       --foreman-proxy-http {{ foreman_proxy_http }}
       --enable-foreman-plugin-ansible
       --enable-foreman-proxy-plugin-ansible
+      --enable-foreman-cli-remote-execution
       --enable-foreman-plugin-remote-execution
+      --foreman-proxy-plugin-remote-execution-script-mode ssh
+      --foreman-proxy-plugin-remote-execution-script-cockpit-integration true
       --enable-foreman-plugin-bootdisk
       --enable-foreman-plugin-templates
   register: foreman_install_result

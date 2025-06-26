@@ -34,14 +34,6 @@
         username: "{{ foreman_default_user }}"
         password: "{{ foreman_default_password }}"
 
-    - name: Remove job_template
-      loop: "{{ foreman_job_templates }}"
-      loop_control:
-        label: "{{ item.name }}"
-      ansible.builtin.file:
-        path: "{{ item.file_name }}"
-        state: "absent"
-
 - name: "Create Installation Media"
   loop: "{{ foreman_install_media }}"
   loop_control:

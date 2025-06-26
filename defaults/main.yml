@@ -17,9 +17,6 @@ foreman_global_params:
   - name: "local_users_file_path"
     parameter_type: "string"
     value: "/usr/share/ansible/default_users.yml"
-  - name: "local_users_file_path"
-    parameter_type: "string"
-    value: "/usr/share/foreman-proxy/.ssh/id_rsa_foreman_proxy.pub"
 
 foreman_host_name: "default.subnet01"
 foreman_default_user: "vagrant"

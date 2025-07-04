@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   ubuntu2204-ci:
-    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-libvirt.yml@main
+    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-vbox.yml@main
     with:
       scenario_name: ubuntu2204
 

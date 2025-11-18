@@ -150,18 +150,4 @@
         group: "{{ ansible_user_gid }}"
         mode: '0644'
 
-    - name: Assign global parameters
-      loop: "{{ foreman_global_params }}"
-      loop_control:
-        label: "{{ item.name }}"
-      theforeman.foreman.global_parameter:
-        name: "{{ item.name }}"
-        parameter_type: "{{ item.parameter_type }}"
-        value: "{{ item.value }}"
-        state: present
-        validate_certs: "{{ foreman_cert_validation }}"
-        server_url: "https://{{ foreman_host_name }}"
-        username: "{{ foreman_default_user }}"
-        password: "{{ foreman_default_password }}"
-
 ...

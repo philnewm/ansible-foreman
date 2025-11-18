@@ -37,12 +37,33 @@ foreman_ansible_requirements_file_dest: "/usr/share/ansible/requirements.yml"
 foreman_ansible_roles_dir: "/usr/share/ansible/roles/"
 foreman_ansible_collections_dir: "/usr/share/ansible/collections/"
 
+foreman_settings:
+  - name: "ansible_post_provision_timeout"
+    value: 120
+  - name: "local_boot_PXEGrub2"
+    value: "PXEGrub2 custom local boot"
+
+foreman_provisioning_templates:
+  - name: "PXEGrub2 custom local boot"
+    kind: "PXEGrub2"
+    locked: false
+    # based_on_default: "PXEGrub2 default local boot"
+    # regex:
+    control_node_source: "pxegrub2_custom_local_boot"
+    file_name: "/tmp/pxegrub2_custom_local_boot"
+    state: "present_with_defaults"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+
 foreman_job_templates:
   - name: "Ansible Roles - Ansible Desktop Users"
     description: "Run Ansible roles per user"
     audit_comment: "Add desktop user playbook"
     provider_type: "Ansible"
     job_category: "Ansible Playbook"
+    remote_exec_feature: 3
     snippet: false
     control_node_source: "files/desktop_user_playbook.yml"
     file_name: "/tmp/desktop_user_playbook.yml"
@@ -91,49 +112,37 @@ foreman_oss:
       - "Linux host_init_config default"
 
 foreman_os_default_templates:
-  AlmaLinux9.5: 
-    - operatingsystem: "AlmaLinux 9.5"
-      provisioning_template: "Kickstart default"
+  Redhat:
+    - provisioning_template: "Kickstart default"
       template_kind: "provision"
-    - operatingsystem: "AlmaLinux 9.5"
-      provisioning_template: "Kickstart default finish"
+    - provisioning_template: "Kickstart default finish"
       template_kind: "finish"
-    - operatingsystem: "AlmaLinux 9.5"
-      provisioning_template: "Kickstart default PXEGrub2"
+    - provisioning_template: "Kickstart default PXEGrub2"
       template_kind: "PXEGrub2"
-    - operatingsystem: "AlmaLinux 9.5"
-      provisioning_template: "Linux host_init_config default"
+    - provisioning_template: "Linux host_init_config default"
       template_kind: "host_init_config"
 
 foreman_os_provisioning_templates:
-  AlmaLinux9.5: 
-    - operatingsystems:
-        - "AlmaLinux 9.5"
-      name: "Kickstart default"
+  Redhat:
+    - name: "Kickstart default"
       kind: "provision"
       locations:
         - "Default Location"
       organizations:
         - "Default Organization"
-    - operatingsystems:
-        - "AlmaLinux 9.5"
-      name: "Kickstart default finish"
+    - name: "Kickstart default finish"
       kind: "finish"
       locations:
         - "Default Location"
       organizations:
         - "Default Organization"
-    - operatingsystems:
-        - "AlmaLinux 9.5"
-      name: "Kickstart default PXEGrub2"
+    - name: "Kickstart default PXEGrub2"
       kind: "PXEGrub2"
       locations:
         - "Default Location"
       organizations:
         - "Default Organization"
-    - operatingsystems:
-        - "AlmaLinux 9.5"
-      name: "Linux host_init_config default"
+    - name: "Linux host_init_config default"
       kind: "host_init_config"
       locations:
         - "Default Location"

@@ -9,7 +9,7 @@ description: |
   Do not associate or change the name.
 -%>
 set default=<%= global_setting("default_pxe_item_local", "local") %>
-set timeout=20
+set timeout=<%= host_param('local_loader_timeout') || 20 %>
 echo Default PXE local template entry is set to '<%= global_setting("default_pxe_item_local", "local") %>'
 
 <%= snippet "pxegrub2_chainload" %>

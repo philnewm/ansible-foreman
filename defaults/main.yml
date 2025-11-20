@@ -13,11 +13,6 @@ foreman_fw_allowed_services:
   - https
   - tftp
 
-foreman_global_params:
-  - name: "local_users_file_path"
-    parameter_type: "string"
-    value: "/usr/share/ansible/default_users.yml"
-
 foreman_host_name: "default.subnet01"
 foreman_default_user: "vagrant"
 foreman_default_password: "vagrant"
@@ -30,12 +25,18 @@ foreman_proxy_dns: "false"
 foreman_proxy_http: "true"
 foreman_cert_validation: "false"
 
+foreman_ansible_root_dir: /etc/ansible
 foreman_default_users_src: "default_users.yml"
-foreman_default_users_file_dest: "/usr/share/ansible/default_users.yml"
+foreman_default_users_file_dest: "{{ foreman_ansible_root_dir }}/default_users.yml"
 foreman_ansible_requirements_file_src: "requirements.yml"
-foreman_ansible_requirements_file_dest: "/usr/share/ansible/requirements.yml"
-foreman_ansible_roles_dir: "/usr/share/ansible/roles/"
-foreman_ansible_collections_dir: "/usr/share/ansible/collections/"
+foreman_ansible_requirements_file_dest: "{{ foreman_ansible_root_dir }}/requirements.yml"
+foreman_ansible_roles_dir: "{{ foreman_ansible_root_dir }}/roles/"
+foreman_ansible_collections_dir: "{{ foreman_ansible_root_dir }}/collections/ansible_collections"
+
+foreman_global_params:
+  - name: "local_users_file_path"
+    parameter_type: "string"
+    value: "{{ foreman_ansible_root_dir }}/default_users.yml"
 
 foreman_settings:
   - name: "ansible_post_provision_timeout"

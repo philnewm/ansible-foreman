@@ -33,7 +33,7 @@
         group: "{{ foreman_default_user }}"
         mode: '0644'
 
-    - name: Install roles to custom path
+    - name: Install requirements to custom path
       become: true
       community.general.ansible_galaxy_install:
         type: both

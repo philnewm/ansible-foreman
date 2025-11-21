@@ -3,7 +3,7 @@
 - name: Install packages
   become: true
   ansible.builtin.package:
-    name: "{{ required_packages[ansible_os_family] }}"
+    name: "{{ foreman_required_packages[ansible_os_family] }}"
     state: present
 
 - name: Set system hostname

@@ -51,7 +51,7 @@
   ansible.builtin.pip:
     requirements: "{{ item.item.requirements_txt }}"
 
-- name: Install Ansible Galaxy dependencies for each role
+- name: "Install Ansible Galaxy dependencies pre role (paths set in {{ foreman_ansible_root_dir }}/ansible.cfg)"
   become: true
   when: item.stat.exists
   loop: "{{ requirements_yml_files.results }}"
@@ -61,8 +61,5 @@
     type: both
     requirements_file: "{{ item.item.requirements_yml }}"
     state: present
-  environment:
-    ANSIBLE_COLLECTIONS_PATH: "{{ foreman_ansible_collections_dir }}"
-    ANSIBLE_ROLES_PATH: "{{ foreman_ansible_roles_dir }}"
 
 ...

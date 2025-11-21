@@ -2,15 +2,16 @@
 
 - name: Ensure pip3 is installed
   become: true
+  loop: "{{ foreman_system_python_packages }}"
   ansible.builtin.package:
-    name: python3-pip
+    name: "{{ item }}"
     state: present
 
 - name: Install Ansible
   become: true
   when: ansible_distribution != "Debian"
   ansible.builtin.pip:
-    name: "{{ ansible_python_packages }}"
+    name: "{{ foreman_ansible_python_packages }}"
     state: present
 
 - name: Install Ansible postgres dependency for Debian
@@ -20,28 +21,52 @@
     name: python3-psycopg2
     state: present
 
-
 - name: Set up ansible roles
   when: foreman_ansible_requirements_file_src is defined
   block:
+    - name: Write ansible.cfg with custom paths
+      become: true
+      loop: "{{ foreman_ansible_config_options }}"
+      loop_control:
+        loop_var: ansible_config_option
+        label: "{{ ansible_config_option.key }}"
+      community.general.ini_file:
+        path: "{{ foreman_ansible_root_dir }}/ansible.cfg"
+        section: "{{ ansible_config_option.section }}"
+        option: "{{ ansible_config_option.key }}"
+        value: "{{ ansible_config_option.value }}"
+        mode: '0644'
+
+    - name: Get site-packages paths
+      ansible.builtin.command:
+        cmd: python3 -c "import site; print('\n'.join(site.getsitepackages()))"
+      changed_when: false
+      register: site_packages_paths
+
+    - name: Remove default ansible collections path
+      become: true
+      loop: "{{ site_packages_paths.stdout_lines }}"
+      loop_control:
+        loop_var: site_packages_path
+      ansible.builtin.file:
+        path: "{{ foreman_ansible_default_collections_path }}"
+        state: absent
+
     - name: Copy requirements file
       become: true
       ansible.builtin.copy:
         src: "{{ foreman_ansible_requirements_file_src }}"
         dest: "{{ foreman_ansible_requirements_file_dest }}"
-        owner: "{{ foreman_default_user }}"
-        group: "{{ foreman_default_user }}"
+        owner: "root"
+        group: "root"
         mode: '0644'
 
-    - name: Install requirements to custom path
+    - name: "Install requirements (paths set in {{ foreman_ansible_root_dir }}/ansible.cfg)"
       become: true
       community.general.ansible_galaxy_install:
         type: both
         requirements_file: "{{ foreman_ansible_requirements_file_dest }}"
         state: present
-      environment:
-        ANSIBLE_COLLECTIONS_PATH: "{{ foreman_ansible_collections_dir }}"
-        ANSIBLE_ROLES_PATH: "{{ foreman_ansible_roles_dir }}"
 
     - name: Include role dependencies
       ansible.builtin.include_tasks:
@@ -50,7 +75,7 @@
 - name: Ensure Ruby compile packages are available
   become: true
   ansible.builtin.package:
-    name: "{{ ruby_packages[ansible_os_family] }}"
+    name: "{{ foreman_ruby_packages[ansible_os_family] }}"
     state: present
 
 - name: Install hammer_cli_foreman_ansible Ruby gem

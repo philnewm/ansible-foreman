@@ -40,6 +40,12 @@ foreman_ansible_config_options:
   - key: "collections_path"
     value: "{{ foreman_ansible_collections_dir }}"
     section: "defaults"
+  - key: "stdout_callback"
+    value: "debug"
+    section: "defaults"
+  - key: "callbacks_enabled"
+    value: "ansible.posix.profile_tasks"
+    section: "defaults"
 
 foreman_global_params:
   - name: "local_users_file_path"

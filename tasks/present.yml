@@ -2,7 +2,7 @@
 
 - name: Check if Foreman is running by calling API
   ansible.builtin.uri:
-    url: "https://{{ ansible_facts.fqdn }}:{{ foreman_server_ssl_port }}/api/statuses"
+    url: "https://{{ foreman_host_name }}:{{ foreman_server_ssl_port }}/api/statuses"
     method: GET
     user: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"

@@ -1,10 +1,10 @@
 # Ansible Foreman
 
-[![Alma9-CI](https://github.com/philnewm/ansible-foreman/actions/workflows/alma9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-foreman/actions/workflows/alma9-ci-caller.yml)  [![Rocky9-CI](https://github.com/philnewm/ansible-foreman/actions/workflows/rocky9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-foreman/actions/workflows/rocky9-ci-caller.yml)  [![CentOSStream9-CI](https://github.com/philnewm/ansible-foreman/actions/workflows/centosstream9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-foreman/actions/workflows/centosstream9-ci-caller.yml)  [![Debian12-CI](https://github.com/philnewm/ansible-foreman/actions/workflows/debian12-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-foreman/actions/workflows/debian12-ci-caller.yml)  [![Ubuntu2204-CI](https://github.com/philnewm/ansible-foreman/actions/workflows/ubuntu2204-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-foreman/actions/workflows/ubuntu2204-ci-caller.yml)
+[![AlmaLinux9-CI](https://github.com/philnewm/ansible-foreman/actions/workflows/almalinux9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-foreman/actions/workflows/alma9-ci-caller.yml) [![Rocky9-CI](https://github.com/philnewm/ansible-foreman/actions/workflows/rocky9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-foreman/actions/workflows/rocky9-ci-caller.yml) [![CentOSStream9-CI](https://github.com/philnewm/ansible-foreman/actions/workflows/centosstream9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-foreman/actions/workflows/centosstream9-ci-caller.yml)
 
 Role description
 
-This role includes a vagrant based molecule testing setup as a submodule at `molecule/`
+This role includes a molecule testing setup as a submodule at `molecule/`
 
 ## Structure
 
@@ -13,6 +13,9 @@ This role includes a vagrant based molecule testing setup as a submodule at `mol
  ┣ 📂 defaults
  ┃ ┗ 📜 main.yml
  ┣ 📂 files
+ ┃ ┣ 📜 custom_playbook.yml
+ ┃ ┣ 📜 default_users.yml
+ ┃ ┣ 📜 pxegrub2_custom_local_boot
  ┃ ┗ 📜 requirements.yml
  ┣ 📂 meta
  ┃ ┗ 📜 main.yml
@@ -21,18 +24,18 @@ This role includes a vagrant based molecule testing setup as a submodule at `mol
  ┃   ┗ 📜, 📜, 📜, scenario_files
  ┣ 📂 tasks
  ┃ ┣ 📜 absent.yml
- ┃ ┣ 📜 ansible_dependencies.yml
+ ┃ ┣ 📜 ansible.yml
  ┃ ┣ 📜 config.yml
  ┃ ┣ 📜 debian_dependencies.yml
  ┃ ┣ 📜 install.yml
  ┃ ┣ 📜 main.yml
  ┃ ┣ 📜 present.yml
- ┃ ┣ 📜 redhat_dependencies.yml
+ ┃ ┣ 📜 requirements.yml
  ┃ ┗ 📜 tests.yml
  ┣ 📂 vars
  ┃ ┗ 📜 main.yml
  ┗ 🗒️ README.md
- ┗ 📓 requirements.txt
+ ┗ 📜 requirements.yml
 
 ```
 
@@ -55,7 +58,8 @@ Elaborate external dependencies and how to use them.
 
 ## Dependencies
 
-List role Ansible-Galaxy dependencies - if any.
+* [`theforeman.foreman`](https://galaxy.ansible.com/ui/repo/published/theforeman/foreman/)
+* [`theforeman.operations`](https://galaxy.ansible.com/ui/repo/published/theforeman/operations/)
 
 ## Example Playbook
 
@@ -64,12 +68,12 @@ Add an example playbook
 ```yaml
 ---
 
-tasks:
-  - name: Include ansible-foreman present
-    ansible.builtin.include_role:
-      name: ansible-foreman
-    vars:
-      state: present
+- name: Install and configure Foreman
+  hosts: foreman
+  vars_files:
+    - foreman_custom_vars.yml
+  roles:
+    - philnewm.foreman
 
 ...
 ```

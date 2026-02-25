@@ -2,8 +2,8 @@
 
 state: "present"
 
-foreman_repositories_version: 3.14
-foreman_version_check: "{{ foreman_repositories_version }}.0"
+foreman_version: "3.17"
+foreman_version_check: "{{ foreman_version }}.0"
 foreman_puppet_version: 8
 
 default_ubuntu_mirror: "http://de.archive.ubuntu.com/ubuntu"
@@ -11,28 +11,74 @@ default_ubuntu_mirror: "http://de.archive.ubuntu.com/ubuntu"
 foreman_fw_allowed_services:
   - http
   - https
-  - tftp
 
-foreman_host_name: "default.subnet01"
-foreman_default_user: "vagrant"
-foreman_default_password: "vagrant"
-foreman_proxy_ssl: "true"
-foreman_proxy_ssl_port: 8443
-foreman_proxy_tftp: "true"
-foreman_proxy_tftp_managed: "true"
+foreman_default_user: "admin"
+foreman_default_password: "admin"
+foreman_admin_timezone: "Europe/Berlin"
+foreman_server_port: 8080
+foreman_server_ssl_port: 8443
+foreman_proxy_ssl_port: 1443
+foreman_remote_execution_script_mode: "ssh"
+foreman_remote_execution_cockpit_integration: "true"
+foreman_puma_workers: 2
+foreman_puma_threads_per_worker: 2
+foreman_proxy_http: "true"
+foreman_proxy_httpboot: "true"
+foreman_proxy_http_port: 8000
+foreman_server_url: "https://{{ ansible_facts.fqdn }}:{{ foreman_server_ssl_port }}"
+
+foreman_install_flags:
+  - "--foreman-initial-admin-username={{ foreman_default_user }}"
+  - "--foreman-initial-admin-password={{ foreman_default_password }}"
+  - "--foreman-initial-admin-timezone={{ foreman_admin_timezone }}"
+  - "--foreman-server-port={{ foreman_server_port }}"
+  - "--foreman-server-ssl-port={{ foreman_server_ssl_port }}"
+  - "--foreman-foreman-url=\"https://{{ ansible_facts.fqdn }}:{{ foreman_server_ssl_port }}\""
+  - "--foreman-unattended-url=\"http://{{ ansible_facts.fqdn }}:{{ foreman_server_port }}\""
+  - "--no-enable-foreman-cli-puppet"
+  - "--enable-foreman-plugin-remote-execution"
+  - "--enable-foreman-cli-remote-execution"
+  - "--enable-foreman-plugin-ansible"
+  - "--enable-foreman-cli-ansible"
+  - "--enable-foreman-plugin-bootdisk"
+  - "--enable-foreman-plugin-templates"
+  - "--foreman-foreman-service-puma-workers={{ foreman_puma_workers }}"
+  - "--foreman-foreman-service-puma-threads-max={{ foreman_puma_threads_per_worker }}"
+  - "--enable-foreman-proxy"
+  - "--foreman-proxy-puppetca=false"
+  - "--foreman-proxy-http={{ foreman_proxy_http }}"
+  - "--foreman-proxy-http-port={{ foreman_proxy_http_port }}"
+  - "--foreman-proxy-httpboot={{ foreman_proxy_httpboot }}"
+  - "--foreman-proxy-ssl-port={{ foreman_proxy_ssl_port }}"
+  - "--foreman-proxy-foreman-base-url=\"https://{{ ansible_facts.fqdn }}:{{ foreman_server_ssl_port }}\""
+  - "--enable-foreman-proxy-plugin-ansible"
+  - "--enable-foreman-proxy-plugin-remote-execution-script"
+  - "--foreman-proxy-plugin-remote-execution-script-mode={{ foreman_remote_execution_script_mode }}"
+  - "--foreman-proxy-plugin-remote-execution-script-cockpit-integration={{ foreman_remote_execution_cockpit_integration }}"
+foreman_disable_puppet_services: true
+
 foreman_ip: "{{ ansible_all_ipv4_addresses[0] }}"
 foreman_proxy_dns: "false"
-foreman_proxy_http: "true"
 foreman_cert_validation: "false"
 
+foreman_setup_ansible: true
 foreman_ansible_default_collections_path: "{{ site_packages_path }}/ansible_collections"
 foreman_ansible_root_dir: /etc/ansible
+foreman_ansible_env_file: "/etc/foreman-proxy/ansible.env"
+foreman_ansible_env_config:
+  - "export ANSIBLE_CALLBACK_WHITELIST=\"theforeman.foreman.foreman,timer,ansible.posix.profile_tasks,ansible.posix.profile_roles\""
+  - "export ANSIBLE_CALLBACKS_ENABLED=\"theforeman.foreman.foreman,timer,ansible.posix.profile_tasks,ansible.posix.profile_roles\""
 foreman_default_users_src: "default_users.yml"
 foreman_default_users_file_dest: "{{ foreman_ansible_root_dir }}/default_users.yml"
 foreman_ansible_requirements_file_src: "requirements.yml"
 foreman_ansible_requirements_file_dest: "{{ foreman_ansible_root_dir }}/requirements.yml"
 foreman_ansible_roles_dir: "{{ foreman_ansible_root_dir }}/roles/"
 foreman_ansible_collections_dir: "{{ foreman_ansible_root_dir }}/collections/ansible_collections"
+foreman_ansible_python_version:
+  redhat: "3.12"
+  debian: "3.11"
+# Note referenced in `/etc/foreman-proxy/settings.d/ansible.yml`
+foreman_ansible_python_venv_path: "/etc/ansible/ansible_venv"
 foreman_ansible_config_options:
   - key: "roles_path"
     value: "{{ foreman_ansible_roles_dir }}"
@@ -54,16 +100,14 @@ foreman_global_params:
 
 foreman_settings:
   - name: "ansible_post_provision_timeout"
-    value: 120
+    value: "120"
   - name: "local_boot_PXEGrub2"
     value: "PXEGrub2 custom local boot"
 
-foreman_provisioning_templates:
+foreman_custom_provisioning_templates:
   - name: "PXEGrub2 custom local boot"
     kind: "PXEGrub2"
     locked: false
-    # based_on_default: "PXEGrub2 default local boot"
-    # regex:
     control_node_source: "pxegrub2_custom_local_boot"
     file_name: "/tmp/pxegrub2_custom_local_boot"
     state: "present_with_defaults"
@@ -72,16 +116,14 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
 
-foreman_job_templates:
-  - name: "Ansible Roles - Ansible Desktop Users"
-    description: "Run Ansible roles per user"
-    audit_comment: "Add desktop user playbook"
-    provider_type: "Ansible"
-    job_category: "Ansible Playbook"
-    remote_exec_feature: 3
-    snippet: false
-    control_node_source: "files/desktop_user_playbook.yml"
-    file_name: "/tmp/desktop_user_playbook.yml"
+foreman_install_media:
+  - name: "AlmaLinux"
+    path: "https://repo.almalinux.org/almalinux/$major/BaseOS/$arch/os/"
+    os_family: "Redhat"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
 
 foreman_domains:
   - domain_description: "subnet01"
@@ -97,21 +139,108 @@ foreman_domains:
     domain_organizations:
       - "Default Organization"
 
-# INFO almalinux changed path from 9.5 to 9 so url set to $major
-foreman_install_media:
-  - name: "AlmaLinux"
-    path: "https://repo.almalinux.org/almalinux/$major/BaseOS/$arch/os/"
-    os_family: "Redhat"
+foreman_provisioning_templates:
+  - template_name: "Linux host_init_config default"
+    template_kind: "host_init_config"
     locations:
       - "Default Location"
     organizations:
       - "Default Organization"
+    os_list:
+      - "AlmaLinux 9.7"
+      - "Fedora 43"
+      - "Ubuntu 24.04"
+  - template_name: "Kickstart default"
+    template_kind: "provision"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "AlmaLinux 9.7"
+      - "Fedora 43"
+  - template_name: "Kickstart default iPXE"
+    template_kind: "iPXE"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "AlmaLinux 9.7"
+      - "Fedora 43"
+  - template_name: "Kickstart default finish"
+    template_kind: "finish"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "AlmaLinux 9.7"
+      - "Fedora 43"
+  - template_name: "Kickstart default PXEGrub2"
+    template_kind: "PXEGrub2"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "AlmaLinux 9.7"
+      - "Fedora 43"
+  - template_name: "Kickstart default PXELinux"
+    template_kind: "PXELinux"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "AlmaLinux 9.7"
+      - "Fedora 43"
+  - template_name: "Preseed default iPXE Autoinstall"
+    template_kind: "iPXE"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "Ubuntu 24.04"
+  - template_name: "Preseed default finish"
+    template_kind: "finish"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "Ubuntu 24.04"
+  - template_name: "Preseed default PXEGrub2 Autoinstall"
+    template_kind: "PXEGrub2"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "Ubuntu 24.04"
+  - template_name: "Preseed default PXELinux Autoinstall"
+    template_kind: "PXELinux"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "Ubuntu 24.04"
+  - template_name: "Preseed Autoinstall cloud-init user data"
+    template_kind: "user_data"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+    os_list:
+      - "Ubuntu 24.04"
 
 foreman_oss:
   - name: "AlmaLinux"
     major: 9
-    minor: 5
-    description: "AlmaLinux 9.5"
+    minor: 7
+    description: "AlmaLinux 9.7"
     family: "Redhat"
     password_hash: "MD5"
     architectures:
@@ -120,49 +249,31 @@ foreman_oss:
       - "Kickstart custom"
     media:
       - "AlmaLinux"
-    provisioning_templates:
-      - "Kickstart default"
-      - "Kickstart default finish"
-      - "Kickstart default PXEGrub2"
-      - "Linux host_init_config default"
-
-foreman_os_default_templates:
-  Redhat:
-    - provisioning_template: "Kickstart default"
-      template_kind: "provision"
-    - provisioning_template: "Kickstart default finish"
-      template_kind: "finish"
-    - provisioning_template: "Kickstart default PXEGrub2"
-      template_kind: "PXEGrub2"
-    - provisioning_template: "Linux host_init_config default"
-      template_kind: "host_init_config"
-
-foreman_os_provisioning_templates:
-  Redhat:
-    - name: "Kickstart default"
-      kind: "provision"
-      locations:
-        - "Default Location"
-      organizations:
-        - "Default Organization"
-    - name: "Kickstart default finish"
-      kind: "finish"
-      locations:
-        - "Default Location"
-      organizations:
-        - "Default Organization"
-    - name: "Kickstart default PXEGrub2"
-      kind: "PXEGrub2"
-      locations:
-        - "Default Location"
-      organizations:
-        - "Default Organization"
-    - name: "Linux host_init_config default"
-      kind: "host_init_config"
-      locations:
-        - "Default Location"
-      organizations:
-        - "Default Organization"
+  - name: "Fedora"
+    major: 43
+    description: "Fedora 43"
+    family: "Redhat"
+    password_hash: "MD5"
+    architectures:
+      - "x86_64"
+    ptables:
+      - "Kickstart custom"
+    media:
+      - "Fedora mirror"
+  # https://theforeman.org/2024/02/provisioning-ubuntu-autoinstall.html
+  - name: "Ubuntu"
+    major: "24"
+    minor: "04"
+    description: "Ubuntu 24.04"
+    release_name: "noble"
+    family: "Debian"
+    password_hash: "SHA512"
+    architectures:
+      - "x86_64"
+    ptables:
+      - "Preseed default autoinstall"
+    media:
+      - "Ubuntu mirror"
 
 foreman_subnets:
   - name: "SubNet01"
@@ -180,10 +291,9 @@ foreman_subnets:
     mtu: 1500
     boot_mode: "Static"
     remote_execution_proxies:
-      - "{{ foreman_host_name }}"
+      - "{{ ansible_facts.fqdn }}"
     domains:
       - "subnet01"
-    tftp_proxy: "{{ foreman_host_name }}"
     domain_locations:
       - "Default Location"
     domain_organizations:
@@ -203,10 +313,9 @@ foreman_subnets:
     mtu: 1500
     boot_mode: "Static"
     remote_execution_proxies:
-      - "{{ foreman_host_name }}"
+      - "{{ ansible_facts.fqdn }}"
     domains:
       - "subnet02"
-    tftp_proxy: "{{ foreman_host_name }}"
     domain_locations:
       - "Default Location"
     domain_organizations:
@@ -215,15 +324,12 @@ foreman_subnets:
 foreman_host_groups:
   - name: "Workstation"
     description: "Desktop systems"
-    environment: "production"
-    puppet_proxy: "{{ foreman_host_name }}"
-    puppet_ca_proxy: "{{ foreman_host_name }}"
     ansible_roles:
       - philnewm.local_users
       - philnewm.gnome
     subnet: "SubNet02"
     architecture: "x86_64"
-    operatingsystem: "AlmaLinux 9.5"
+    operatingsystem: "AlmaLinux 9.7"
     medium: "AlmaLinux"
     ptable: "Kickstart custom"
     pxe_loader: "Grub2 UEFI"
@@ -245,11 +351,8 @@ foreman_hosts:
     organization: "Default Organization"
     location: "Default Location"
     hostgroup: "Workstation"
-    environment: "production"
-    puppet_proxy: "{{ foreman_host_name }}"
-    puppet_ca_proxy: "{{ foreman_host_name }}"
     architecture: "x86_64"
-    operatingsystem: "AlmaLinux 9.5"
+    operatingsystem: "AlmaLinux 9.7"
     build: true
     media: "AlmaLinux"
     ptable: "Kickstart custom"

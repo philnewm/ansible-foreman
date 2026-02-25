@@ -1,5 +1,11 @@
 ---
 
+- name: Install python requests
+  become: true
+  ansible.builtin.package:
+    name: "python3-requests"
+    state: present
+
 - name: Assign global parameters
   loop: "{{ foreman_global_params }}"
   loop_control:
@@ -10,19 +16,15 @@
     value: "{{ item.value }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "https://{{ foreman_host_name }}"
+    server_url: "{{ foreman_server_url }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
 - name: Import provisioning templates
-  when: foreman_provisioning_templates is defined
+  when: foreman_custom_provisioning_templates is defined
   block:
-    # TODO modify existing templates from foreman
-    # hammer --output json -u admin -p '%!J2B7CnCTTxLM' template list
-    # replace line `set timeout=20` with `set timeout=<%= host_param('local_loader_timeout') || 20 %>`
-    # reupload as `PXEGrub2 default local boot config timeout`
     - name: Copy files to remote host
-      loop: "{{ foreman_provisioning_templates }}"
+      loop: "{{ foreman_custom_provisioning_templates }}"
       loop_control:
         loop_var: prov_template
         label: "{{ prov_template.name }}"
@@ -32,7 +34,7 @@
         mode: '0644'
 
     - name: Import provisioning templates
-      loop: "{{ foreman_provisioning_templates }}"
+      loop: "{{ foreman_custom_provisioning_templates }}"
       loop_control:
         loop_var: prov_template
         label: "{{ prov_template.name }}"
@@ -45,7 +47,7 @@
         locations: "{{ prov_template.locations }}"
         organizations: "{{ prov_template.organizations }}"
         validate_certs: "{{ foreman_cert_validation }}"
-        server_url: "https://{{ foreman_host_name }}"
+        server_url: "{{ foreman_server_url }}"
         username: "{{ foreman_default_user }}"
         password: "{{ foreman_default_password }}"
 
@@ -59,7 +61,7 @@
       ansible.builtin.copy:
         src: "{{ item.control_node_source }}"
         dest: "{{ item.file_name }}"
-        mode: '0644'
+        mode: "0644"
 
     - name: Add custom job templates
       loop: "{{ foreman_job_templates }}"
@@ -79,27 +81,9 @@
         organizations:
           - "Default Organization"
         validate_certs: "{{ foreman_cert_validation }}"
-        server_url: "https://{{ foreman_host_name }}"
+        server_url: "{{ foreman_server_url }}"
         username: "{{ foreman_default_user }}"
         password: "{{ foreman_default_password }}"
-
-    # TODO fix idempotence
-    - name: Set as remote execution feature
-      when: job_template.remote_exec_feature
-      loop: "{{ foreman_job_templates }}"
-      loop_control:
-        loop_var: job_template
-        label: "{{ job_template.name }}"
-      ansible.builtin.command:
-        cmd: >
-          hammer
-          -u {{ foreman_default_user }}
-          -p '{{ foreman_default_password }}'
-          remote-execution-feature update
-          --id '{{ job_template.remote_exec_feature }}'
-          --job-template '{{ job_template.name }}'
-      register: result_remote_exec
-      changed_when: result_remote_exec.rc == 0
 
 - name: "Create Installation Media"
   loop: "{{ foreman_install_media }}"
@@ -113,62 +97,67 @@
     organizations: "{{ item.organizations }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "https://{{ foreman_host_name }}"
+    server_url: "{{ foreman_server_url }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
-- name: "Create Operating System"
+- name: "Create Operating Systems"
   loop: "{{ foreman_oss }}"
   loop_control:
     label: "{{ item.description }}"
   theforeman.foreman.operatingsystem:
     name: "{{ item.name }}"
     major: "{{ item.major }}"
-    minor: "{{ item.minor }}"
+    minor: "{{ item.minor | default(omit) }}"
     description: "{{ item.description }}"
+    release_name: "{{ item.release_name | default(omit) }}"
     family: "{{ item.family }}"
     password_hash: "{{ item.password_hash }}"
     architectures: "{{ item.architectures }}"
     ptables: "{{ item.ptables }}"
     media: "{{ item.media }}"
-    provisioning_templates: "{{ item.provisioning_templates }}"
+    provisioning_templates: "{{
+        foreman_provisioning_templates
+        | selectattr('os_list', 'contains', item.description)
+        | map(attribute='template_name')
+        | list }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "https://{{ foreman_host_name }}"
+    server_url: "{{ foreman_server_url }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
-- name: Set default provisioning templates
-  loop: "{{ foreman_oss }}"
+- name: Set default templates
+  loop: "{{ foreman_oss | product(foreman_provisioning_templates) | list }}"
   loop_control:
-    loop_var: os
-    label: "{{ os.description }}"
-  ansible.builtin.include_tasks:
-    file: "configure_default_templates.yml"
+    label: "{{ item.0.description }} → {{ item.1.template_name }}"
+  when: item.0.description in item.1.os_list
+  theforeman.foreman.os_default_template:
+    operatingsystem: "{{ item.0.description }}"
+    provisioning_template: "{{ item.1.template_name }}"
+    template_kind: "{{ item.1.template_kind }}"
+    state: present
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "{{ foreman_server_url }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
 
-- name: Initialize os_by_family
-  ansible.builtin.set_fact:
-    os_by_family: {}
-
-- name: Group oss per family
-  loop: "{{ foreman_oss }}"
+- name: Set provisioning templates
+  loop: "{{ foreman_provisioning_templates }}"
   loop_control:
-    label: "{{ item.description }}"
-  ansible.builtin.set_fact:
-    os_by_family: >-
-      {{
-        os_by_family | combine({
-          item.family: (os_by_family[item.family] | default([])) + [ item.description ]
-        })
-      }}
-
-- name: Include provisioning templates
-  loop: "{{ os_by_family | dict2items }}"
-  loop_control:
-    loop_var: os_family
-    label: "{{ os_family.key }}"
-  ansible.builtin.include_tasks:
-    file: configure_os_provisioning_templates.yml
+    loop_var: prov_template
+    label: "{{ prov_template.template_name }}"
+  theforeman.foreman.provisioning_template:
+    operatingsystems: "{{ prov_template.os_list }}"
+    name: "{{ prov_template.template_name }}"
+    kind: "{{ prov_template.template_kind }}"
+    locations: "{{ prov_template.locations }}"
+    organizations: "{{ prov_template.organizations }}"
+    state: "present"
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "{{ foreman_server_url }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
 
 - name: "Create Domains"
   loop: "{{ foreman_domains }}"
@@ -181,7 +170,7 @@
     organizations: "{{ item.domain_organizations }}"
     state: "present"
     validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "https://{{ foreman_host_name }}"
+    server_url: "{{ foreman_server_url }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
@@ -206,12 +195,12 @@
     boot_mode: "{{ item.boot_mode }}"
     remote_execution_proxies: "{{ item.remote_execution_proxies }}"
     domains: "{{ item.domains }}"
-    tftp_proxy: "{{ item.tftp_proxy }}"
+    tftp_proxy: "{{ item.tftp_proxy | default(omit) }}"
     locations: "{{ item.domain_locations }}"
     organizations: "{{ item.domain_organizations }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "https://{{ foreman_host_name }}"
+    server_url: "{{ foreman_server_url }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
@@ -222,9 +211,9 @@
   theforeman.foreman.hostgroup:
     name: "{{ item.name }}"
     description: "{{ item.description }}"
-    environment: "{{ item.environment }}"
-    puppet_proxy: "{{ item.puppet_proxy }}"
-    puppet_ca_proxy: "{{ item.puppet_ca_proxy }}"
+    environment: "{{ item.environment | default(omit) }}"
+    puppet_proxy: "{{ item.puppet_proxy | default(omit) }}"
+    puppet_ca_proxy: "{{ item.puppet_ca_proxy | default(omit) }}"
     ansible_roles: "{{ item.ansible_roles }}"
     subnet: "{{ item.subnet }}"
     architecture: "{{ item.architecture }}"
@@ -237,7 +226,7 @@
     parameters: "{{ item.parameters }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "https://{{ foreman_host_name }}"
+    server_url: "{{ foreman_server_url }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
@@ -246,17 +235,17 @@
     location: "Default Location"
     organization: "Default Organization"
     validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "https://{{ foreman_host_name }}"
+    server_url: "{{ foreman_server_url }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
   register: present_hosts
 
-# INFO `root_pass` is a write only parameter and will otherwise cause changes on every run
+# Note `root_pass` is a write only parameter and will otherwise cause changes on every run
 - name: Extract list of existing hostnames
   ansible.builtin.set_fact:
     existing_hostnames: "{{ present_hosts.hosts | map(attribute='name') | list }}"
 
-- name: "Create hosts"
+- name: Create hosts
   loop: "{{ foreman_hosts }}"
   loop_control:
     label: "{{ item.name }}"
@@ -266,16 +255,16 @@
     organization: "{{ item.organization }}"
     location: "{{ item.location }}"
     hostgroup: "{{ item.hostgroup }}"
-    environment: "{{ item.environment }}"
-    puppet_proxy: "{{ item.puppet_proxy }}"
-    puppet_ca_proxy: "{{ item.puppet_ca_proxy }}"
+    environment: "{{ item.environment | default(omit) }}"
+    puppet_proxy: "{{ item.puppet_proxy | default(omit) }}"
+    puppet_ca_proxy: "{{ item.puppet_ca_proxy | default(omit) }}"
     architecture: "{{ item.architecture }}"
     operatingsystem: "{{ item.operatingsystem }}"
     build: "{{ item.build }}"
     media: "{{ item.media }}"
     ptable: "{{ item.ptable }}"
     pxe_loader: "{{ item.pxe_loader }}"
-    # INFO Check required for idempotence
+    # Note Check required for idempotence
     root_pass: >-
       {{
         (item.name not in existing_hostnames)
@@ -285,7 +274,7 @@
     parameters: "{{ item.parameters }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "https://{{ foreman_host_name }}"
+    server_url: "{{ foreman_server_url }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
@@ -298,7 +287,7 @@
     name: "{{ setting.name }}"
     value: "{{ setting.value }}"
     validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "https://{{ foreman_host_name }}"
+    server_url: "{{ foreman_server_url }}"
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 

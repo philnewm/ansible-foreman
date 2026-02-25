@@ -1,13 +1,7 @@
 ---
 
-# TODO test foreman api response
-# TODO test ansible system wide installed version
-# TODO test ansible requirements.yml file at `foreman_ansible_requirements_file`
-# TODO test foreman default users file at `foreman_default_users_file`
-# TODO test ansible roles an colelctions present at `foreman_ansible_roles_dir/collections_dir`
-# TODO test OSs present
-# TODO test subnets present
-# TODO test hostgroups present
-# TODO test hosts present
+- name: No tests
+  ansible.builtin.debug:
+    msg: "Tests are obsolete - converge and idempotence handle it already"
 
 ...

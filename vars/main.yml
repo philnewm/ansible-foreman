@@ -1,34 +1,12 @@
 ---
 
-foreman_required_packages:
-  RedHat:
-    - foreman-installer
-    - rubygem-foreman_bootdisk
-    - rubygem-hammer_cli_foreman_bootdisk
-    - rubygem-hammer_cli_foreman_discovery
-  Debian:
-    - foreman-installer
-    - ruby-foreman-bootdisk
-    - ruby-hammer-cli-foreman-bootdisk
-    - ruby-hammer-cli-foreman-discovery
-
-foreman_ruby_packages:
-  RedHat:
-    - gcc
-    - make
-    - glibc-devel
-    - ruby-devel
-    - ruby
-  Debian:
-    - ruby
-
-foreman_system_python_packages:
-  - python3
-  - python3-pip
+foreman_yum_url: "https://yum.theforeman.org/releases/{{ foreman_version }}/el9/x86_64/foreman-release.rpm"
 
 foreman_ansible_python_packages:
+  - pip
   - ansible
   - requests
+  - psycopg2-binary
 
 foreman_packages_command:
   RedHat: "rpm -qa | grep -i foreman"

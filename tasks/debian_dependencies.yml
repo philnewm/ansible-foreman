@@ -17,44 +17,4 @@
     state: present
     update_cache: true
 
-- name: "Download Puppet {{ foreman_puppet_version }}"
-  ansible.builtin.get_url:
-    url: "https://apt.puppet.com/puppet{{ foreman_puppet_version }}-release-{{ ansible_distribution_release }}.deb"
-    dest: "/tmp/puppet{{ foreman_puppet_version }}-release-{{ ansible_distribution_release }}.deb"
-    mode: '0644'
-
-- name: "Install Puppet {{ foreman_puppet_version }}"
-  become: true
-  ansible.builtin.apt:
-    deb: "/tmp/puppet{{ foreman_puppet_version }}-release-{{ ansible_distribution_release }}.deb"
-
-- name: Install Foreman GPG key
-  become: true
-  ansible.builtin.get_url:
-    url: https://deb.theforeman.org/foreman.asc
-    dest: /etc/apt/trusted.gpg.d/foreman.asc
-    mode: '0444'
-
-- name: Update APT cache
-  become: true
-  ansible.builtin.apt:
-    update_cache: true
-
-- name: "Setup repository for Foreman {{ foreman_repositories_version }}"
-  become: true
-  ansible.builtin.apt_repository:
-    repo: "deb http://deb.theforeman.org {{ ansible_distribution_release }} {{ foreman_repositories_version }}"
-    state: present
-
-- name: "Setup repository for Foreman Plugins {{ foreman_repositories_version }}"
-  become: true
-  ansible.builtin.apt_repository:
-    repo: "deb http://deb.theforeman.org plugins {{ foreman_repositories_version }}"
-    state: present
-
-- name: Update APT cache
-  become: true
-  ansible.builtin.apt:
-    update_cache: true
-
 ...

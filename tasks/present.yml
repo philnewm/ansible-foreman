@@ -2,7 +2,7 @@
 
 - name: Check if Foreman is running by calling API
   ansible.builtin.uri:
-    url: "https://{{ foreman_host_name }}/api/statuses"
+    url: "https://{{ ansible_facts.fqdn }}:{{ foreman_server_ssl_port }}/api/statuses"
     method: GET
     user: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
@@ -15,21 +15,43 @@
 
 - name: Extract Foreman version
   ansible.builtin.set_fact:
-    foreman_version: "{{ foreman_api.json.results.foreman.version | default('') }}"
+    installed_foreman_version: "{{ foreman_api.json.results.foreman.version | default('') }}"
 
-- name: Include dependencies
-  when: foreman_version != foreman_version_check
+- name: Include requirements
   ansible.builtin.include_tasks:
-    file: "{{ ansible_os_family | lower }}_dependencies.yml"
+    file: "requirements.yml"
 
 - name: Include install
-  when: foreman_version != foreman_version_check
+  when: installed_foreman_version != foreman_version_check
   ansible.builtin.include_tasks:
     file: install.yml
 
-- name: Include ansible dependencies
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Configure firewalld if available
+  when: "'firewalld.service' in ansible_facts.services"
+  block:
+    - name: Ensure firewalld is running and enabled
+      become: true
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Allow services in firewalld permanently
+      become: true
+      loop: "{{ foreman_fw_allowed_services }}"
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+
+- name: Set up ansible
+  when: foreman_setup_ansible
   ansible.builtin.include_tasks:
-    file: set_up_ansible.yml
+    file: ansible.yml
 
 - name: Include config
   ansible.builtin.include_tasks:

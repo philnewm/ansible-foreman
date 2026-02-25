@@ -1,19 +1,36 @@
 ---
 
-# INFO https://community.theforeman.org/t/documentation-full-and-clean-uninstall-process/22459/5
+# Note https://community.theforeman.org/t/documentation-full-and-clean-uninstall-process/22459/5
 - name: Uninstall Foreman
   ansible.builtin.debug:
     msg: "Research how to uninstall foreman"
 
-- name: Get foreman services
+# Note list is expected to be incomplete
+- name: Disable services
+  become: true
+  loop:
+    - foreman
+    - foreman-proxy
+    - httpd
+    - puppet
+    - puppetserver
+    - postgresql
+    - redis
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+
+- name: Get foreman packages
   ansible.builtin.shell:
     cmd: "{{ foreman_packages_command[ansible_os_family] }} || true"
   register: foreman_services
   changed_when: false
 
-- name: These servcies would need clean uninstalls
-  when: foreman_services.stdout_lines
-  ansible.builtin.debug:
-    var: foreman_services.stdout_lines
+- name: Remove foreman packages
+  become: true
+  ansible.builtin.package:
+    name: "{{ foreman_services.stdout_lines }}"
+    state: absent
 
 ...

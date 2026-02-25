@@ -25,14 +25,4 @@
       ansible.builtin.set_fact:
         desktop_users: "{{ users | selectattr('desktop', 'equalto', true) | map(attribute='name') | list }}"
 
-    - name: Configure Gnome for desktop users
-      loop: "{{ desktop_users }}"
-      loop_control:
-        loop_var: desktop_user
-      ansible.builtin.include_role:
-        name: philnewm.gnome_user_config
-      vars:
-        state: present
-        user: "{{ desktop_user }}"
-
 ...

@@ -1,35 +1,23 @@
 ---
 
-- name: Install packages
-  become: true
-  ansible.builtin.package:
-    name: "{{ foreman_required_packages[ansible_os_family] }}"
-    state: present
+- name: Display installer options
+  ansible.builtin.debug:
+    msg: >-
+      foreman-installer
+      --scenario=foreman
+      {{ foreman_install_flags | join(" ") }}
 
-- name: Set system hostname
-  become: true
-  ansible.builtin.hostname:
-    name: "{{ foreman_host_name }}"
-
-- name: Add hostname to /etc/hosts
-  become: true
-  ansible.builtin.lineinfile:
-    path: /etc/hosts
-    create: true
-    regexp: "^{{ foreman_host_name }}\\s+"
-    line: "{{ foreman_ip }} {{ foreman_host_name }} "
-    owner: "root"
-    group: "root"
-    mode: '0644'
-    state: present
-
+# Note debian fails to create database from `formen-installer`
+# ActiveRecord::NoDatabaseError: We could not find your database: foreman. Which can be found in the database configuration file located at config/database.yml.
 - name: Create user and database on debian beforehand
-  when: ansible_distribution == "Debian"
+  when: ansible_facts.distribution | lower == "debian"
   block:
     - name: Install PostgreSQL server
       become: true
       ansible.builtin.apt:
-        name: postgresql
+        name:
+          - postgresql
+          - acl  # Note required for `become_user`
         state: present
         update_cache: true
 
@@ -53,6 +41,7 @@
         name: foreman
         role_attr_flags: SUPERUSER
         state: present
+        login_user: postgres
 
     - name: Ensure 'foreman' database exists
       become: true
@@ -61,63 +50,42 @@
         name: foreman
         owner: foreman
         state: present
+        login_user: postgres
 
-# TODO test with --no-enable-puppet
-- name: Install foreman
+- name: Create user and database on debian beforehand
   become: true
-  when: foreman_version != foreman_version_check
-  ansible.builtin.command:
-    cmd: >
-      foreman-installer
-      --foreman-initial-admin-username {{ foreman_default_user }}
-      --foreman-initial-admin-password {{ foreman_default_password }}
-      --enable-foreman-proxy
-      --foreman-proxy-ssl {{ foreman_proxy_ssl }}
-      --foreman-proxy-ssl-port {{ foreman_proxy_ssl_port }}
-      --foreman-proxy-tftp {{ foreman_proxy_tftp }}
-      --foreman-proxy-tftp-managed {{ foreman_proxy_tftp_managed }}
-      --foreman-proxy-tftp-servername {{ foreman_ip }}
-      --foreman-proxy-dns {{ foreman_proxy_dns }}
-      --foreman-proxy-http {{ foreman_proxy_http }}
-      --enable-foreman-plugin-ansible
-      --enable-foreman-proxy-plugin-ansible
-      --enable-foreman-cli-remote-execution
-      --enable-foreman-plugin-remote-execution
-      --foreman-proxy-plugin-remote-execution-script-mode ssh
-      --foreman-proxy-plugin-remote-execution-script-cockpit-integration true
-      --enable-foreman-plugin-bootdisk
-      --enable-foreman-plugin-templates
-  register: foreman_install_result
-  changed_when: foreman_install_result.rc == 0
+  when: ansible_facts.distribution | lower == "debian"
+  ansible.builtin.apt:
+    name: cron
+    state: present
+    update_cache: true
 
-- name: Gather service facts
-  ansible.builtin.service_facts:
+- name: Include foreman installer
+  become: true
+  ansible.builtin.import_role:
+    name: theforeman.operations.installer
+  vars:
+    foreman_installer_scenario: "foreman"
+    foreman_installer_package: "foreman-installer"
+    foreman_installer_verbose: false
+    foreman_installer_timeout: 300
+    foreman_installer_options: "{{ foreman_install_flags }}"
 
-- name: Configure firewalld if available
-  when: "'firewalld.service' in ansible_facts.services"
+- name: Disable puppet
+  when: foreman_disable_puppet_services
   block:
-    - name: Ensure firewalld is running and enabled
+    - name: Disable and stop puppetserver
       become: true
-      ansible.builtin.service:
-        name: firewalld
-        state: started
-        enabled: true
+      ansible.builtin.systemd_service:
+        name: "puppetserver"
+        state: stopped
+        enabled: false
 
-    - name: Allow services in firewalld permanently
+    - name: Disable and stop puppet
       become: true
-      loop: "{{ foreman_fw_allowed_services }}"
-      ansible.posix.firewalld:
-        service: "{{ item }}"
-        permanent: true
-        state: enabled
-        immediate: true
-
-- name: Ensure correct ownership of /var/lib/tftpboot
-  become: true
-  ansible.builtin.file:
-    path: /var/lib/tftpboot
-    owner: foreman-proxy
-    group: foreman-proxy
-    recurse: true
+      ansible.builtin.systemd_service:
+        name: "puppet"
+        state: stopped
+        enabled: false
 
 ...

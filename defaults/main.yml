@@ -2,15 +2,20 @@
 
 state: "present"
 
-foreman_version: "3.17"
-foreman_version_check: "{{ foreman_version }}.0"
+foreman_version: "3.17.1"
 foreman_puppet_version: 8
 
+# https://releases.ubuntu.com/24.04/netboot/amd64/
+# https://community.theforeman.org/t/how-to-provision-ubuntu-22-04-or-24-04/42690
 default_ubuntu_mirror: "http://de.archive.ubuntu.com/ubuntu"
 
 foreman_fw_allowed_services:
   - http
   - https
+
+foreman_fw_allowed_ports:
+  - 8000/tcp  # httpboot
+  - 8443/tcp  # remote execution access using dynflow/ansible
 
 foreman_host_name: "{{ ansible_facts.fqdn }}"
 foreman_default_user: "admin"
@@ -19,10 +24,16 @@ foreman_admin_timezone: "Europe/Berlin"
 foreman_server_port: 8080
 foreman_server_ssl_port: 8443
 foreman_proxy_ssl_port: 1443
+foreman_proxy_tftp: "false"
+foreman_proxy_tftp_managed: "false"
+foreman_proxy_puppet: "true"  # Note `false` causes puppet runtime collisions
+foreman_proxy_disable_puppet_after_install: true
+foreman_proxy_puppetca: "false"
 foreman_remote_execution_script_mode: "ssh"
 foreman_remote_execution_cockpit_integration: "true"
 foreman_puma_workers: 2
 foreman_puma_threads_per_worker: 2
+foreman_proxy_register_in_foreman: "true"
 foreman_proxy_http: "true"
 foreman_proxy_httpboot: "true"
 foreman_proxy_http_port: 8000
@@ -46,7 +57,11 @@ foreman_install_flags:
   - "--foreman-foreman-service-puma-workers={{ foreman_puma_workers }}"
   - "--foreman-foreman-service-puma-threads-max={{ foreman_puma_threads_per_worker }}"
   - "--enable-foreman-proxy"
-  - "--foreman-proxy-puppetca=false"
+  - "--foreman-proxy-puppet={{ foreman_proxy_puppet }}"
+  - "--foreman-proxy-puppetca={{ foreman_proxy_puppetca }}"
+  - "--foreman-proxy-register-in-foreman={{ foreman_proxy_register_in_foreman }}"
+  - "--foreman-proxy-tftp={{ foreman_proxy_tftp }}"
+  - "--foreman-proxy-tftp-managed={{ foreman_proxy_tftp_managed }}"
   - "--foreman-proxy-http={{ foreman_proxy_http }}"
   - "--foreman-proxy-http-port={{ foreman_proxy_http_port }}"
   - "--foreman-proxy-httpboot={{ foreman_proxy_httpboot }}"
@@ -58,7 +73,6 @@ foreman_install_flags:
   - "--foreman-proxy-plugin-remote-execution-script-cockpit-integration={{ foreman_remote_execution_cockpit_integration }}"
 foreman_disable_puppet_services: true
 
-foreman_ip: "{{ ansible_all_ipv4_addresses[0] }}"
 foreman_proxy_dns: "false"
 foreman_cert_validation: "false"
 
@@ -117,6 +131,16 @@ foreman_custom_provisioning_templates:
     organizations:
       - "Default Organization"
 
+foreman_job_templates:
+  - name: "Ansible Roles - Custom execution"
+    description: "Run Ansible custom playbook"
+    audit_comment: "Add custom playbook"
+    provider_type: "Ansible"
+    job_category: "Ansible Playbook"
+    snippet: false
+    control_node_source: "custom_playbook.yml"
+    file_name: "/tmp/custom_playbook.yml"
+
 foreman_install_media:
   - name: "AlmaLinux"
     path: "https://repo.almalinux.org/almalinux/$major/BaseOS/$arch/os/"
@@ -124,20 +148,6 @@ foreman_install_media:
     locations:
       - "Default Location"
     organizations:
-      - "Default Organization"
-
-foreman_domains:
-  - domain_description: "subnet01"
-    domain_name: "subnet01"
-    domain_locations:
-      - "Default Location"
-    domain_organizations:
-      - "Default Organization"
-  - domain_description: "subnet02"
-    domain_name: "subnet02"
-    domain_locations:
-      - "Default Location"
-    domain_organizations:
       - "Default Organization"
 
 foreman_provisioning_templates:
@@ -276,6 +286,20 @@ foreman_oss:
     media:
       - "Ubuntu mirror"
 
+foreman_domains:
+  - domain_description: "subnet01"
+    domain_name: "subnet01"
+    domain_locations:
+      - "Default Location"
+    domain_organizations:
+      - "Default Organization"
+  - domain_description: "subnet02"
+    domain_name: "subnet02"
+    domain_locations:
+      - "Default Location"
+    domain_organizations:
+      - "Default Organization"
+
 foreman_subnets:
   - name: "SubNet01"
     descr: "SubNet01"
@@ -326,7 +350,6 @@ foreman_host_groups:
   - name: "Workstation"
     description: "Desktop systems"
     ansible_roles:
-      - philnewm.local_users
       - philnewm.gnome
     subnet: "SubNet02"
     architecture: "x86_64"

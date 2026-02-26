@@ -3,7 +3,7 @@
 - name: Install python requests
   become: true
   ansible.builtin.package:
-    name: "python3-requests"
+    name: "{{ foreman_system_python_packages[ansible_facts.os_family | lower] }}"
     state: present
 
 - name: Assign global parameters
@@ -196,6 +196,7 @@
     remote_execution_proxies: "{{ item.remote_execution_proxies }}"
     domains: "{{ item.domains }}"
     tftp_proxy: "{{ item.tftp_proxy | default(omit) }}"
+    httpboot_proxy: "{{ item.httpboot_proxy | default(omit) }}"
     locations: "{{ item.domain_locations }}"
     organizations: "{{ item.domain_organizations }}"
     state: present
@@ -259,10 +260,10 @@
     puppet_proxy: "{{ item.puppet_proxy | default(omit) }}"
     puppet_ca_proxy: "{{ item.puppet_ca_proxy | default(omit) }}"
     architecture: "{{ item.architecture }}"
-    operatingsystem: "{{ item.operatingsystem }}"
+    operatingsystem: "{{ item.operatingsystem | default(omit) }}"
     build: "{{ item.build }}"
-    media: "{{ item.media }}"
-    ptable: "{{ item.ptable }}"
+    media: "{{ item.media | default(omit) }}"
+    ptable: "{{ item.ptable | default(omit) }}"
     pxe_loader: "{{ item.pxe_loader }}"
     # Note Check required for idempotence
     root_pass: >-

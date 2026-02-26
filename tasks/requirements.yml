@@ -12,6 +12,6 @@
   ansible.builtin.import_role:
     name: theforeman.operations.foreman_repositories
   vars:
-    foreman_repositories_version: "{{ foreman_version }}"
+    foreman_repositories_version: "{{ foreman_version.split('.')[:2] | join('.') }}"
 
 ...

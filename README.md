@@ -17,6 +17,8 @@ This role includes a molecule testing setup as a submodule at `molecule/`
  ┃ ┣ 📜 default_users.yml
  ┃ ┣ 📜 pxegrub2_custom_local_boot
  ┃ ┗ 📜 requirements.yml
+ ┣ 📂 handlers
+ ┃ ┗ 📜 main.yml
  ┣ 📂 meta
  ┃ ┗ 📜 main.yml
  ┣ 📂 molecule

@@ -71,7 +71,7 @@
     create: true
     backrefs: true
     owner: "foreman-proxy"
-    group: "foreman-proxy"
+    group: "root"
     mode: "0640"
   notify: Restart foreman-proxy
 

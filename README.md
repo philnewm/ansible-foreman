@@ -1,8 +1,8 @@
 # Ansible Foreman
 
-[![AlmaLinux 9](https://github.com/philnewm/ansible-foreman/actions/workflows/ci.yml/badge.svg?job=almalinux9)](https://github.com/philnewm/ansible-foreman/actions/workflows/ci.yml)
-[![Rocky 9](https://github.com/philnewm/ansible-foreman/actions/workflows/ci.yml/badge.svg?job=rocky9)](https://github.com/philnewm/ansible-foreman/actions/workflows/ci.yml)
-[![CentOS Stream 9](https://github.com/philnewm/ansible-foreman/actions/workflows/ci.yml/badge.svg?job=centosstream9)](https://github.com/philnewm/ansible-foreman/actions/workflows/ci.yml)
+[![AlmaLinux 9](https://github.com/philnewm/ansible-foreman/actions/workflows/ci-caller.yml/badge.svg?job=almalinux9)](https://github.com/philnewm/ansible-foreman/actions/workflows/ci-caller.yml)
+[![Rocky 9](https://github.com/philnewm/ansible-foreman/actions/workflows/ci-caller.yml/badge.svg?job=rocky9)](https://github.com/philnewm/ansible-foreman/actions/workflows/ci-caller.yml)
+[![CentOS Stream 9](https://github.com/philnewm/ansible-foreman/actions/workflows/ci-caller.yml/badge.svg?job=centosstream9)](https://github.com/philnewm/ansible-foreman/actions/workflows/ci-caller.yml)
 
 Role description
 

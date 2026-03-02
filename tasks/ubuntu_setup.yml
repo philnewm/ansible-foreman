@@ -1,0 +1,30 @@
+---
+
+# https://community.theforeman.org/t/unable-to-host-files-in-pub-folder/34795
+# https://community.theforeman.org/t/pub-folder-and-http-missing/31913/3
+- name: Ensure ubuntu tftp boot dir is present
+  become: true
+  ansible.builtin.file:
+    path: "/var/lib/tftpboot/boot"
+    state: directory
+    owner: "foreman-proxy"
+    group: root
+    mode: "0755"
+
+- name: Get initrd
+  ansible.builtin.get_url:
+    url: https://releases.ubuntu.com/24.04/netboot/amd64/initrd
+    dest: "/var/lib/tftpboot/boot/ubuntu-mirror-{{ host_id }}-initrd"
+    owner: foreman-proxy
+    group: foreman-proxy
+    mode: "0644"
+
+- name: Get kernel
+  ansible.builtin.get_url:
+    url: https://releases.ubuntu.com/24.04/netboot/amd64/linux
+    dest: "/var/lib/tftpboot/boot/ubuntu-mirror-{{ host_id }}-vmlinuz"
+    owner: foreman-proxy
+    group: foreman-proxy
+    mode: "0644"
+
+...

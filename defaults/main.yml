@@ -35,6 +35,8 @@ foreman_remote_execution_script_mode: "ssh"
 foreman_remote_execution_cockpit_integration: "true"
 foreman_puma_workers: 2
 foreman_puma_threads_per_worker: 2
+foreman_dynflow_workers: 1
+foreman_dynflow_worker_concurrency: 2
 foreman_proxy_register_in_foreman: "true"
 foreman_proxy_http: "true"
 foreman_proxy_httpboot: "true"
@@ -58,6 +60,8 @@ foreman_install_flags:
   - "--enable-foreman-plugin-templates"
   - "--foreman-foreman-service-puma-workers={{ foreman_puma_workers }}"
   - "--foreman-foreman-service-puma-threads-max={{ foreman_puma_threads_per_worker }}"
+  - "--foreman-dynflow-worker-instances={{ foreman_dynflow_workers }}"
+  - "--foreman-dynflow-worker-concurrency={{ foreman_dynflow_worker_concurrency }}"
   - "--enable-foreman-proxy"
   - "--foreman-proxy-puppet={{ foreman_proxy_puppet }}"
   - "--foreman-proxy-puppetca={{ foreman_proxy_puppetca }}"

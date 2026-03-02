@@ -6,13 +6,6 @@
     name: "python{{ foreman_ansible_python_version[ansible_facts.os_family | lower] }}"
     state: present
 
-- name: Install venv system
-  become: true
-  when: ansible_facts.os_family | lower == "debian"
-  ansible.builtin.package:
-    name: "python{{ foreman_ansible_python_version[ansible_facts.os_family | lower] }}-venv"
-    state: present
-
 - name: Ensure ansible virtualenv exists with latest pip
   become: true
   loop: "{{ foreman_ansible_python_packages }}"

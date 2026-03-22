@@ -1,6 +1,6 @@
 ---
 
-- name: "Install python{{ foreman_ansible_python_version }}"
+- name: "Install python{{ foreman_ansible_python_version[ansible_facts.os_family | lower] }}"
   become: true
   ansible.builtin.package:
     name: "python{{ foreman_ansible_python_version[ansible_facts.os_family | lower] }}"
@@ -8,31 +8,40 @@
 
 - name: Ensure ansible virtualenv exists with latest pip
   become: true
-  loop: "{{ foreman_ansible_python_packages }}"
-  loop_control:
-    loop_var: "python_package"
   ansible.builtin.pip:
-    name: "{{ python_package }}"
+    name: "{{ foreman_ansible_python_packages }}"
     virtualenv: "{{ foreman_ansible_python_venv_path }}"
     virtualenv_command: "python{{ foreman_ansible_python_version[ansible_facts.os_family | lower] }} -m venv"
 
-- name: Get ansible file stats
+- name: Get ansible executables file stats
+  loop: "{{ foreman_ansible_executables }}"
+  loop_control:
+    loop_var: "ansible_exec"
   ansible.builtin.stat:
-    path: "/usr/bin/ansible"
-  register: ansible_exec_results
+    path: "/usr/bin/{{ ansible_exec }}"
+  register: present_ansible_executables
 
-- name: Remove existing executable
+- name: Remove existing ansible executables
   become: true
-  when: not ansible_exec_results.stat.islnk
+  loop: "{{ present_ansible_executables.results }}"
+  loop_control:
+    loop_var: "exec_file"
+    label: "{{ exec_file.ansible_exec }}"
+  when: exec_file.stat.exists and not exec_file.stat.islnk
   ansible.builtin.file:
-    path: "/usr/bin/ansible"
+    path: "{{ exec_file.stat.path }}"
     state: absent
 
+# Note alternative module possible but seems overkill here
 - name: Set ansible symlink to venv
   become: true
+  loop: "{{ present_ansible_executables.results }}"
+  loop_control:
+    loop_var: "exec_file"
+    label: "{{ exec_file.invocation.module_args.path }}"
   ansible.builtin.file:
-    src: "{{ foreman_ansible_python_venv_path }}/bin/ansible"
-    dest: "/usr/bin/ansible"
+    src: "{{ foreman_ansible_python_venv_path }}/bin/{{ exec_file.ansible_exec }}"
+    dest: "/usr/bin/{{ exec_file.ansible_exec }}"
     owner: root
     group: root
     state: link

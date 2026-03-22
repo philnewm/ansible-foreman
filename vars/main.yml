@@ -5,6 +5,7 @@ foreman_yum_url: "https://yum.theforeman.org/releases/{{ foreman_version }}/el9/
 foreman_ansible_python_packages:
   - pip
   - ansible
+  - ansible-lint
   - requests
   - psycopg2-binary
 

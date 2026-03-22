@@ -41,6 +41,7 @@ foreman_proxy_register_in_foreman: "true"
 foreman_proxy_http: "true"
 foreman_proxy_httpboot: "true"
 foreman_proxy_http_port: 8000
+foreman_proxy_templates: "true"
 foreman_server_url: "https://{{ foreman_host_name }}:{{ foreman_server_ssl_port }}"
 
 foreman_install_flags:
@@ -73,6 +74,7 @@ foreman_install_flags:
   - "--foreman-proxy-httpboot={{ foreman_proxy_httpboot }}"
   - "--foreman-proxy-ssl-port={{ foreman_proxy_ssl_port }}"
   - "--foreman-proxy-foreman-base-url=\"https://{{ foreman_host_name }}:{{ foreman_server_ssl_port }}\""
+  - "--foreman-proxy-templates={{ foreman_proxy_templates }}"
   - "--enable-foreman-proxy-plugin-ansible"
   - "--enable-foreman-proxy-plugin-remote-execution-script"
   - "--foreman-proxy-plugin-remote-execution-script-mode={{ foreman_remote_execution_script_mode }}"
@@ -83,6 +85,19 @@ foreman_proxy_dns: "false"
 foreman_cert_validation: "false"
 
 foreman_setup_ansible: true
+foreman_ansible_executables:
+  - ansible
+  - ansible-community
+  - ansible-config
+  - ansible-console
+  - ansible-doc
+  - ansible-galaxy
+  - ansible-inventory
+  - ansible-lint
+  - ansible-playbook
+  - ansible-pull
+  - ansible-test
+  - ansible-vault
 foreman_ansible_default_collections_path: "{{ site_packages_path }}/ansible_collections"
 foreman_ansible_root_dir: /etc/ansible
 foreman_ansible_env_file: "/etc/foreman-proxy/ansible.env"
@@ -125,12 +140,54 @@ foreman_settings:
   - name: "local_boot_PXEGrub2"
     value: "PXEGrub2 custom local boot"
 
+foreman_custom_partition_tables:
+  - name: "Preseed default autoinstall full disk"
+    locked: false
+    os_family: "Debian"
+    control_node_source: "preseed_default_autoinstall_full_disk"
+    file_name: "/tmp/preseed_default_autoinstall_full_disk"
+    state: "present_with_defaults"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+
 foreman_custom_provisioning_templates:
   - name: "PXEGrub2 custom local boot"
     kind: "PXEGrub2"
     locked: false
     control_node_source: "pxegrub2_custom_local_boot"
     file_name: "/tmp/pxegrub2_custom_local_boot"
+    state: "present_with_defaults"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+  - name: "Preseed Autoinstall cloud-init user data custom"
+    kind: "user_data"
+    locked: false
+    control_node_source: "preseed_autoinstall_cloud-init_user_data_custom"
+    file_name: "/tmp/preseed_autoinstall_cloud-init_user_data_custom"
+    state: "present_with_defaults"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+  - name: "preseed_netplan_setup_custom"
+    kind: "snippet"
+    locked: false
+    control_node_source: "preseed_netplan_setup_custom"
+    file_name: "/tmp/preseed_netplan_setup_custom"
+    state: "present_with_defaults"
+    locations:
+      - "Default Location"
+    organizations:
+      - "Default Organization"
+  - name: "preseed_netplan_generic_interface_custom"
+    kind: "snippet"
+    locked: false
+    control_node_source: "preseed_netplan_generic_interface_custom"
+    file_name: "/tmp/preseed_netplan_generic_interface_custom"
     state: "present_with_defaults"
     locations:
       - "Default Location"
@@ -166,7 +223,7 @@ foreman_provisioning_templates:
     os_list:
       - "AlmaLinux 9.7"
       - "Fedora 43"
-      - "Ubuntu 24.04"
+      - "{{ foreman_ubuntu_24_lts }}"
   - template_name: "Kickstart default"
     template_kind: "provision"
     locations:
@@ -219,7 +276,7 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "Ubuntu 24.04"
+      - "{{ foreman_ubuntu_24_lts }}"
   - template_name: "Preseed default finish"
     template_kind: "finish"
     locations:
@@ -227,7 +284,7 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "Ubuntu 24.04"
+      - "{{ foreman_ubuntu_24_lts }}"
   - template_name: "Preseed default PXEGrub2 Autoinstall"
     template_kind: "PXEGrub2"
     locations:
@@ -235,7 +292,7 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "Ubuntu 24.04"
+      - "{{ foreman_ubuntu_24_lts }}"
   - template_name: "Preseed default PXELinux Autoinstall"
     template_kind: "PXELinux"
     locations:
@@ -243,16 +300,25 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "Ubuntu 24.04"
-  - template_name: "Preseed Autoinstall cloud-init user data"
+      - "{{ foreman_ubuntu_24_lts }}"
+  # - template_name: "Preseed Autoinstall cloud-init user data"
+  #   template_kind: "user_data"
+  #   locations:
+  #     - "Default Location"
+  #   organizations:
+  #     - "Default Organization"
+  #   os_list:
+  #     - "{{ foreman_ubuntu_24_lts }}"
+  - template_name: "Preseed Autoinstall cloud-init user data custom"
     template_kind: "user_data"
     locations:
       - "Default Location"
     organizations:
       - "Default Organization"
     os_list:
-      - "Ubuntu 24.04"
+      - "{{ foreman_ubuntu_24_lts }}"
 
+foreman_ubuntu_24_lts: "Ubuntu 24.04.4 LTS"
 foreman_oss:
   - name: "AlmaLinux"
     major: 9
@@ -280,15 +346,14 @@ foreman_oss:
   # https://theforeman.org/2024/02/provisioning-ubuntu-autoinstall.html
   - name: "Ubuntu"
     major: "24"
-    minor: "04"
-    description: "Ubuntu 24.04"
+    description: "{{ foreman_ubuntu_24_lts }}"
     release_name: "noble"
     family: "Debian"
     password_hash: "SHA512"
     architectures:
       - "x86_64"
     ptables:
-      - "Preseed default autoinstall"
+      - "Preseed default autoinstall full disk"
     media:
       - "Ubuntu mirror"
 

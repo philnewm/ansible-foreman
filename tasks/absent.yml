@@ -27,7 +27,7 @@
 
 - name: Get foreman packages
   ansible.builtin.shell:
-    cmd: "{{ foreman_packages_command[ansible_os_family] }} || true"
+    cmd: "{{ foreman_packages_command[ansible_facts.os_family] }} || true"
   register: foreman_services
   changed_when: false
 

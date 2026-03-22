@@ -20,6 +20,37 @@
     username: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
 
+- name: Import partition tables
+  when: foreman_custom_partition_tables is defined
+  block:
+    - name: Copy files to remote host
+      loop: "{{ foreman_custom_partition_tables }}"
+      loop_control:
+        loop_var: part_table
+        label: "{{ part_table.name }}"
+      ansible.builtin.copy:
+        src: "{{ part_table.control_node_source }}"
+        dest: "{{ part_table.file_name }}"
+        mode: '0644'
+
+    - name: Import partition tables
+      loop: "{{ foreman_custom_partition_tables }}"
+      loop_control:
+        loop_var: part_table
+        label: "{{ part_table.name }}"
+      theforeman.foreman.partition_table:
+        name: "{{ part_table.name }}"
+        locked: "{{ part_table.locked }}"
+        os_family: "{{ part_table.os_family }}"
+        file_name: "{{ part_table.file_name }}"
+        state: "{{ part_table.state }}"
+        locations: "{{ part_table.locations }}"
+        organizations: "{{ part_table.organizations }}"
+        validate_certs: "{{ foreman_cert_validation }}"
+        server_url: "{{ foreman_server_url }}"
+        username: "{{ foreman_default_user }}"
+        password: "{{ foreman_default_password }}"
+
 - name: Import provisioning templates
   when: foreman_custom_provisioning_templates is defined
   block:
@@ -184,13 +215,13 @@
     network_type: "{{ item.network_type }}"
     network: "{{ item.network }}"
     cidr: "{{ item.cidr }}"
-    gateway: "{{ item.gateway }}"
-    dns_primary: "{{ item.dns_primary }}"
-    dns_secondary: "{{ item.dns_secondary }}"
+    gateway: "{{ item.gateway | default(omit) }}"
+    dns_primary: "{{ item.dns_primary | default(omit) }}"
+    dns_secondary: "{{ item.dns_secondary | default(omit) }}"
     ipam: "{{ item.ipam }}"
-    from_ip: "{{ item.dhcp_start }}"
-    to_ip: "{{ item.dhcp_end }}"
-    vlanid: "{{ item.vlanid }}"
+    from_ip: "{{ item.dhcp_start | default(omit) }}"
+    to_ip: "{{ item.dhcp_end | default(omit) }}"
+    vlanid: "{{ item.vlanid | default(omit) }}"
     mtu: "{{ item.mtu }}"
     boot_mode: "{{ item.boot_mode }}"
     remote_execution_proxies: "{{ item.remote_execution_proxies }}"

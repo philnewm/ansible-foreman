@@ -104,6 +104,40 @@
         requirements_file: "{{ foreman_ansible_requirements_file_dest }}"
         state: present
 
+    - name: Find all requirements.txt files in roles
+      ansible.builtin.find:
+        paths: "{{ foreman_ansible_roles_dir }}"
+        patterns: "requirements.txt"
+        recurse: true
+      register: found_requirements
+
+    - name: Read requirements files
+      loop: "{{ found_requirements.files }}"
+      loop_control:
+        loop_var: requirement_file
+        label: "{{ requirement_file.path }}"
+      ansible.builtin.slurp:
+        path: "{{ requirement_file.path }}"
+      register: requirements_contents
+
+    - name: Build combined requirements list
+      ansible.builtin.set_fact:
+        combined_requirements: >-
+          {{
+            requirements_contents.results
+            | map(attribute='content')
+            | map('b64decode')
+            | map('split', '\n')
+            | list
+            | flatten
+          }}
+
+    - name: Install python requirements into ansible venv
+      become: true
+      ansible.builtin.pip:
+        name: "{{ combined_requirements }}"
+        virtualenv: "{{ foreman_ansible_python_venv_path }}"
+
 # TODO Fix on Debian12 - some manual changes might help
 # sudo mkdir -p /etc/ansible/roles
 # sudo chown -R foreman-proxy: /etc/ansible/roles

@@ -2,7 +2,7 @@
 
 state: "present"
 
-foreman_version: "3.17.1"
+foreman_version: "3.18.1"
 foreman_puppet_version: 8
 
 # https://releases.ubuntu.com/24.04/netboot/amd64/

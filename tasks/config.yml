@@ -290,12 +290,12 @@
     environment: "{{ item.environment | default(omit) }}"
     puppet_proxy: "{{ item.puppet_proxy | default(omit) }}"
     puppet_ca_proxy: "{{ item.puppet_ca_proxy | default(omit) }}"
-    architecture: "{{ item.architecture }}"
+    architecture: "{{ item.architecture | default(omit) }}"
     operatingsystem: "{{ item.operatingsystem | default(omit) }}"
     build: "{{ item.build }}"
     media: "{{ item.media | default(omit) }}"
     ptable: "{{ item.ptable | default(omit) }}"
-    pxe_loader: "{{ item.pxe_loader }}"
+    pxe_loader: "{{ item.pxe_loader | default(omit) }}"
     # Note Check required for idempotence
     root_pass: >-
       {{

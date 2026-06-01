@@ -68,7 +68,7 @@
     foreman_installer_scenario: "foreman"
     foreman_installer_package: "foreman-installer"
     foreman_installer_verbose: false
-    foreman_installer_timeout: 300
+    foreman_installer_timeout: 360
     foreman_installer_options: "{{ foreman_install_flags }}"
 
 - name: Disable puppet

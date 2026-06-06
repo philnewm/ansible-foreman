@@ -63,20 +63,21 @@
         src: "{{ prov_template.control_node_source }}"
         dest: "{{ prov_template.file_name }}"
         mode: '0644'
+      register: template_copy
 
     - name: Import provisioning templates
-      loop: "{{ foreman_custom_provisioning_templates }}"
+      loop: "{{ foreman_custom_provisioning_templates | zip(template_copy.results) | list }}"
       loop_control:
-        loop_var: prov_template
-        label: "{{ prov_template.name }}"
+        loop_var: prov_template_pair
+        label: "{{ prov_template_pair.0.name }}"
       theforeman.foreman.provisioning_template:
-        name: "{{ prov_template.name }}"
-        kind: "{{ prov_template.kind }}"
-        locked: "{{ prov_template.locked }}"
-        file_name: "{{ prov_template.file_name }}"
-        state: "{{ prov_template.state }}"
-        locations: "{{ prov_template.locations }}"
-        organizations: "{{ prov_template.organizations }}"
+        name: "{{ prov_template_pair.0.name }}"
+        kind: "{{ prov_template_pair.0.kind }}"
+        locked: "{{ prov_template_pair.0.locked }}"
+        file_name: "{{ prov_template_pair.0.file_name }}"
+        state: "{{ 'present' if prov_template_pair.1.changed else prov_template_pair.0.state }}"
+        locations: "{{ prov_template_pair.0.locations }}"
+        organizations: "{{ prov_template_pair.0.organizations }}"
         validate_certs: "{{ foreman_cert_validation }}"
         server_url: "{{ foreman_server_url }}"
         username: "{{ foreman_default_user }}"

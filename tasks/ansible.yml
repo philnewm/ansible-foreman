@@ -32,13 +32,13 @@
     path: "{{ exec_file.stat.path }}"
     state: absent
 
-# Note alternative module possible but seems overkill here
+# Note `alternative` module possible but seems overkill here
 - name: Set ansible symlink to venv
   become: true
   loop: "{{ present_ansible_executables.results }}"
   loop_control:
     loop_var: "exec_file"
-    label: "{{ exec_file.invocation.module_args.path }}"
+    label: "{{ exec_file.ansible_exec }}"
   ansible.builtin.file:
     src: "{{ foreman_ansible_python_venv_path }}/bin/{{ exec_file.ansible_exec }}"
     dest: "/usr/bin/{{ exec_file.ansible_exec }}"

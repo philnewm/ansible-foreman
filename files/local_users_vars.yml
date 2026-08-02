@@ -4,7 +4,7 @@ local_users_sudo_group:
   RedHat: "wheel"
   Debian: "sudo"
 
-users:
+local_users_users:
   - name: "philnewm"
     display_name: "Phil Newm"
     password: "{{ 'changeme1' | password_hash('sha512') }}"
@@ -25,4 +25,3 @@ users:
     remote_execution: false
 
 ...
-

@@ -196,12 +196,15 @@
   register: result
   changed_when: result.rc == 0
 
-- name: Copy default users
+- name: Copy vars files
   become: true
-  when: foreman_default_users_src is defined
+  loop: "{{ foreman_ansible_vars_files }}"
+  loop_control:
+    loop_var: vars_file
+    label: "{{ vars_file.name }}"
   ansible.builtin.copy:
-    src: "{{ foreman_default_users_src }}"
-    dest: "{{ foreman_default_users_file_dest }}"
+    src: "{{ vars_file.name }}"
+    dest: "{{ vars_file.dest }}"
     owner: "{{ ansible_facts.user_id }}"
     group: "{{ ansible_facts.user_gid }}"
     mode: '0644'

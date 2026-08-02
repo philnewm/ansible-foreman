@@ -90,7 +90,7 @@
       loop: "{{ foreman_job_templates }}"
       loop_control:
         label: "{{ item.name }}"
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: "{{ item.control_node_source }}"
         dest: "{{ item.file_name }}"
         mode: "0644"
@@ -116,6 +116,51 @@
         server_url: "{{ foreman_server_url }}"
         username: "{{ foreman_default_user }}"
         password: "{{ foreman_default_password }}"
+
+    - name: Get remote execution features
+      ansible.builtin.command:
+        cmd: >
+          hammer
+          --output json
+          -u {{ foreman_default_user }}
+          -p '{{ foreman_default_password }}'
+          remote-execution-feature
+          list
+      changed_when: false
+      register: remote_exec_feat
+
+    - name: Parse query output
+      ansible.builtin.set_fact:
+        remote_exec_list: "{{ remote_exec_feat.stdout | from_json }}"
+
+    - name: Remap features
+      ansible.builtin.set_fact:
+        remote_exec_state: >-
+          {{
+            dict(
+              remote_exec_list | map(attribute='ID')
+              | zip(remote_exec_list | map(attribute='Job template name'))
+            )
+          }}
+
+    - name: Update remote execution features if required
+      loop: "{{ foreman_job_templates }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - item.remote_exec_feature_id is defined
+        - remote_exec_state[item.remote_exec_feature_id | int] != item.name
+      ansible.builtin.command:
+        cmd: >
+          hammer
+          -u {{ foreman_default_user }}
+          -p '{{ foreman_default_password }}'
+          remote-execution-feature
+          update
+          --id {{ item.remote_exec_feature_id }}
+          --job-template "{{ item.name }}"
+      register: result
+      changed_when: '"Remote execution feature updated" in result.stdout'
 
 - name: "Create Installation Media"
   loop: "{{ foreman_install_media }}"

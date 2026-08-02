@@ -2,7 +2,7 @@
 
 state: "present"
 
-foreman_version: "3.18.1"
+foreman_version: "3.19.1"
 foreman_puppet_version: 8
 
 # https://releases.ubuntu.com/24.04/netboot/amd64/
@@ -104,8 +104,6 @@ foreman_ansible_env_file: "/etc/foreman-proxy/ansible.env"
 foreman_ansible_env_config:
   - "export ANSIBLE_CALLBACK_WHITELIST=\"theforeman.foreman.foreman,timer,ansible.posix.profile_tasks,ansible.posix.profile_roles\""
   - "export ANSIBLE_CALLBACKS_ENABLED=\"theforeman.foreman.foreman,timer,ansible.posix.profile_tasks,ansible.posix.profile_roles\""
-foreman_default_users_src: "default_users.yml"
-foreman_default_users_file_dest: "{{ foreman_ansible_root_dir }}/default_users.yml"
 foreman_ansible_requirements_file_src: "requirements.yml"
 foreman_ansible_requirements_file_dest: "{{ foreman_ansible_root_dir }}/requirements.yml"
 foreman_ansible_roles_dir: "{{ foreman_ansible_root_dir }}/roles/"
@@ -115,6 +113,9 @@ foreman_ansible_python_version:
   debian: "3.11"
 # Note referenced in `/etc/foreman-proxy/settings.d/ansible.yml`
 foreman_ansible_python_venv_path: "/etc/ansible/ansible_venv"
+foreman_ansible_vars_files:
+  - name: "local_users_vars.yml"
+    dest: "{{ foreman_ansible_root_dir }}/local_users_vars.yml"
 foreman_ansible_config_options:
   - key: "roles_path"
     value: "{{ foreman_ansible_roles_dir }}"
@@ -195,14 +196,15 @@ foreman_custom_provisioning_templates:
       - "Default Organization"
 
 foreman_job_templates:
-  - name: "Ansible Roles - Custom execution"
-    description: "Run Ansible custom playbook"
-    audit_comment: "Add custom playbook"
+  - name: "Ansible Roles - Custom vars"
+    description: "Run Ansible custom vars playbook"
+    audit_comment: "Add custom vars playbook"
     provider_type: "Ansible"
     job_category: "Ansible Playbook"
     snippet: false
-    control_node_source: "custom_playbook.yml"
-    file_name: "/tmp/custom_playbook.yml"
+    control_node_source: "custom_vars_playbook.yml.j2"
+    file_name: "/tmp/custom_vars_playbook.yml"
+    remote_exec_feature_id: "3"  # 'Run Ansible roles'
 
 foreman_install_media:
   - name: "AlmaLinux"

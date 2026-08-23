@@ -285,23 +285,25 @@
 - name: Create host groups
   loop: "{{ foreman_host_groups }}"
   loop_control:
-    label: "{{ item.name }}"
+    loop_var: host_group
+    label: "{{ host_group.name }}"
   theforeman.foreman.hostgroup:
-    name: "{{ item.name }}"
-    description: "{{ item.description }}"
-    environment: "{{ item.environment | default(omit) }}"
-    puppet_proxy: "{{ item.puppet_proxy | default(omit) }}"
-    puppet_ca_proxy: "{{ item.puppet_ca_proxy | default(omit) }}"
-    ansible_roles: "{{ item.ansible_roles }}"
-    subnet: "{{ item.subnet }}"
-    architecture: "{{ item.architecture }}"
-    operatingsystem: "{{ item.operatingsystem }}"
-    medium: "{{ item.medium }}"
-    ptable: "{{ item.ptable }}"
-    pxe_loader: "{{ item.pxe_loader }}"
-    locations: "{{ item.locations }}"
-    organizations: "{{ item.organizations }}"
-    parameters: "{{ item.parameters }}"
+    name: "{{ host_group.name }}"
+    description: "{{ host_group.description | default(omit) }}"
+    parent: "{{ host_group.parent | default(omit) }}"
+    environment: "{{ host_group.environment | default(omit) }}"
+    puppet_proxy: "{{ host_group.puppet_proxy | default(omit) }}"
+    puppet_ca_proxy: "{{ host_group.puppet_ca_proxy | default(omit) }}"
+    ansible_roles: "{{ host_group.ansible_roles | default(omit) }}"
+    subnet: "{{ host_group.subnet | default(omit) }}"
+    architecture: "{{ host_group.architecture | default(omit) }}"
+    operatingsystem: "{{ host_group.operatingsystem | default(omit) }}"
+    medium: "{{ host_group.medium | default(omit) }}"
+    ptable: "{{ host_group.ptable | default(omit) }}"
+    pxe_loader: "{{ host_group.pxe_loader | default(omit) }}"
+    locations: "{{ host_group.locations | default(omit) }}"
+    organizations: "{{ host_group.organizations | default(omit) }}"
+    parameters: "{{ host_group.parameters | default(omit) }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
     server_url: "{{ foreman_server_url }}"
@@ -329,10 +331,10 @@
     label: "{{ item.name }}"
   theforeman.foreman.host:
     name: "{{ item.name }}"
-    domain: "{{ item.domain }}"
+    domain: "{{ item.domain | default(omit) }}"
     organization: "{{ item.organization }}"
     location: "{{ item.location }}"
-    hostgroup: "{{ item.hostgroup }}"
+    hostgroup: "{{ item.hostgroup | default(omit) }}"
     environment: "{{ item.environment | default(omit) }}"
     puppet_proxy: "{{ item.puppet_proxy | default(omit) }}"
     puppet_ca_proxy: "{{ item.puppet_ca_proxy | default(omit) }}"
@@ -349,7 +351,7 @@
         | ternary(item.root_password, omit)
       }}
     interfaces_attributes: "{{ item.interfaces_attributes }}"
-    parameters: "{{ item.parameters }}"
+    parameters: "{{ item.parameters | default(omit) }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
     server_url: "{{ foreman_server_url }}"

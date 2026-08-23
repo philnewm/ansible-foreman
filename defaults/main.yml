@@ -104,7 +104,7 @@ foreman_ansible_env_file: "/etc/foreman-proxy/ansible.env"
 foreman_ansible_env_config:
   - "export ANSIBLE_CALLBACK_WHITELIST=\"theforeman.foreman.foreman,timer,ansible.posix.profile_tasks,ansible.posix.profile_roles\""
   - "export ANSIBLE_CALLBACKS_ENABLED=\"theforeman.foreman.foreman,timer,ansible.posix.profile_tasks,ansible.posix.profile_roles\""
-foreman_ansible_requirements_file_src: "requirements.yml"
+foreman_ansible_requirements_file_src: "dummy_requirements.yml"
 foreman_ansible_requirements_file_dest: "{{ foreman_ansible_root_dir }}/requirements.yml"
 foreman_ansible_roles_dir: "{{ foreman_ansible_root_dir }}/roles/"
 foreman_ansible_collections_dir: "{{ foreman_ansible_root_dir }}/collections/ansible_collections"
@@ -114,7 +114,7 @@ foreman_ansible_python_version:
 # Note referenced in `/etc/foreman-proxy/settings.d/ansible.yml`
 foreman_ansible_python_venv_path: "/etc/ansible/ansible_venv"
 foreman_ansible_vars_files:
-  - name: "local_users_vars.yml"
+  - name: "dummy_local_users_vars.yml"
     dest: "{{ foreman_ansible_root_dir }}/local_users_vars.yml"
 foreman_ansible_config_options:
   - key: "roles_path"
@@ -145,7 +145,7 @@ foreman_custom_partition_tables:
   - name: "Preseed default autoinstall full disk"
     locked: false
     os_family: "Debian"
-    control_node_source: "preseed_default_autoinstall_full_disk"
+    control_node_source: "dummy_preseed_default_autoinstall_full_disk.erb"
     file_name: "/tmp/preseed_default_autoinstall_full_disk"
     state: "present_with_defaults"
     locations:
@@ -157,7 +157,7 @@ foreman_custom_provisioning_templates:
   - name: "PXEGrub2 custom local boot"
     kind: "PXEGrub2"
     locked: false
-    control_node_source: "pxegrub2_custom_local_boot"
+    control_node_source: "dummy_pxegrub2_custom_local_boot.erb"
     file_name: "/tmp/pxegrub2_custom_local_boot"
     state: "present_with_defaults"
     locations:
@@ -167,7 +167,7 @@ foreman_custom_provisioning_templates:
   - name: "Preseed Autoinstall cloud-init user data custom"
     kind: "user_data"
     locked: false
-    control_node_source: "preseed_autoinstall_cloud-init_user_data_custom"
+    control_node_source: "dummy_preseed_autoinstall_cloud-init_user_data_custom.erb"
     file_name: "/tmp/preseed_autoinstall_cloud-init_user_data_custom"
     state: "present_with_defaults"
     locations:
@@ -177,7 +177,7 @@ foreman_custom_provisioning_templates:
   - name: "preseed_netplan_setup_custom"
     kind: "snippet"
     locked: false
-    control_node_source: "preseed_netplan_setup_custom"
+    control_node_source: "dummy_preseed_netplan_setup_custom.erb"
     file_name: "/tmp/preseed_netplan_setup_custom"
     state: "present_with_defaults"
     locations:
@@ -187,7 +187,7 @@ foreman_custom_provisioning_templates:
   - name: "preseed_netplan_generic_interface_custom"
     kind: "snippet"
     locked: false
-    control_node_source: "preseed_netplan_generic_interface_custom"
+    control_node_source: "dummy_preseed_netplan_generic_interface_custom.erb"
     file_name: "/tmp/preseed_netplan_generic_interface_custom"
     state: "present_with_defaults"
     locations:
@@ -223,7 +223,7 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "AlmaLinux 9.7"
+      - "AlmaLinux 9.8"
       - "Fedora 43"
       - "{{ foreman_ubuntu_24_lts }}"
   - template_name: "Kickstart default"
@@ -233,7 +233,7 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "AlmaLinux 9.7"
+      - "AlmaLinux 9.8"
       - "Fedora 43"
   - template_name: "Kickstart default iPXE"
     template_kind: "iPXE"
@@ -242,7 +242,7 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "AlmaLinux 9.7"
+      - "AlmaLinux 9.8"
       - "Fedora 43"
   - template_name: "Kickstart default finish"
     template_kind: "finish"
@@ -251,7 +251,7 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "AlmaLinux 9.7"
+      - "AlmaLinux 9.8"
       - "Fedora 43"
   - template_name: "Kickstart default PXEGrub2"
     template_kind: "PXEGrub2"
@@ -260,7 +260,7 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "AlmaLinux 9.7"
+      - "AlmaLinux 9.8"
       - "Fedora 43"
   - template_name: "Kickstart default PXELinux"
     template_kind: "PXELinux"
@@ -269,7 +269,7 @@ foreman_provisioning_templates:
     organizations:
       - "Default Organization"
     os_list:
-      - "AlmaLinux 9.7"
+      - "AlmaLinux 9.8"
       - "Fedora 43"
   - template_name: "Preseed default iPXE Autoinstall"
     template_kind: "iPXE"
@@ -325,7 +325,7 @@ foreman_oss:
   - name: "AlmaLinux"
     major: 9
     minor: 7
-    description: "AlmaLinux 9.7"
+    description: "AlmaLinux 9.8"
     family: "Redhat"
     password_hash: "MD5"
     architectures:
@@ -420,66 +420,31 @@ foreman_subnets:
       - "Default Organization"
 
 foreman_host_groups:
+  - name: Internal-Host
+    description: Internal systems
+    pxe_loader: "Grub2 UEFI"
+    architecture: "x86_64"
+    subnet: "SubNet01"
+    domain: "subnet01"
+    parameters:
+      - name: "remote_execution_ssh_user"
+        parameter_type: string
+        value: "config-manager"
+      - name: "remote_execution_create_user"
+        parameter_type: boolean
+        value: true
   - name: "Workstation"
     description: "Desktop systems"
+    parent: "Internal-Host"
     ansible_roles:
       - philnewm.gnome
-    subnet: "SubNet02"
-    architecture: "x86_64"
-    operatingsystem: "AlmaLinux 9.7"
+    operatingsystem: "AlmaLinux 9.8"
     medium: "AlmaLinux"
     ptable: "Kickstart custom"
-    pxe_loader: "Grub2 UEFI"
-    locations:
-      - "Default Location"
-    organizations:
-      - "Default Organization"
     parameters:
       - name: "state"
         parameter_type: "string"
         value: "present"
-      - name: "remote_execution_ssh_user"
-        parameter_type: string
-        value: "config-manager"
-
-foreman_hosts:
-  - name: "test-station.subnet02"
-    domain: "subnet02"
-    organization: "Default Organization"
-    location: "Default Location"
-    hostgroup: "Workstation"
-    architecture: "x86_64"
-    operatingsystem: "AlmaLinux 9.7"
-    build: true
-    media: "AlmaLinux"
-    ptable: "Kickstart custom"
-    pxe_loader: "Grub2 UEFI"
-    root_password: "changeme"  # Only gets set for new hosts
-    interfaces_attributes:
-      - type: "interface"
-        mac: "12:ab:34:cd:56:ef"
-        identifier: "eth1"
-        name: "test-station.subnet01"
-        domain: "subnet01"
-        subnet: "SubNet01"
-        ip: "192.168.56.105"
-        managed: true
-        primary: false
-        provision: true
-      - type: "interface"
-        mac: "12:ab:34:cd:56:ef"
-        identifier: "eth1.1"
-        name: "test-station.subnet02"
-        domain: "subnet02"
-        subnet: "SubNet02"
-        ip: "192.168.2.83"
-        managed: true
-        primary: true
-        virtual: true
-        execution: true
-        tag: 1
-        attached_to: "eth1"
-    parameters:
       - name: "part_device"
         parameter_type: "string"
         value: "nvme0n1"
@@ -507,5 +472,43 @@ foreman_hosts:
       - name: "part_home_name"
         parameter_type: "string"
         value: "home"
+  - name: "Server"
+    description: "Service provider"
+    parent: "Internal-Host"
+    operatingsystem: "AlmaLinux 9.8"
+    medium: "AlmaLinux"
+    ptable: "Kickstart custom"
+
+foreman_hosts:
+  - name: "test-station.subnet02"
+    hostgroup: "Internal-Host/Workstation"
+    build: false
+    root_password: "changeme"  # Only gets set for new hosts
+    organization: "Default Organization"
+    location: "Default Location"
+    interfaces_attributes:
+      - type: "interface"
+        mac: "12:ab:34:cd:56:ef"
+        identifier: "eth1"
+        name: "test-station.subnet01"
+        domain: "subnet01"
+        subnet: "SubNet01"
+        ip: "192.168.56.105"
+        managed: true
+        primary: false
+        provision: true
+      - type: "interface"
+        mac: "12:ab:34:cd:56:ef"
+        identifier: "eth1.1"
+        name: "test-station.subnet02"
+        domain: "subnet02"
+        subnet: "SubNet02"
+        ip: "192.168.2.83"
+        managed: true
+        primary: true
+        virtual: true
+        execution: true
+        tag: 1
+        attached_to: "eth1"
 
 ...

@@ -54,7 +54,17 @@
 - name: Import provisioning templates
   when: foreman_custom_provisioning_templates is defined
   block:
+    - name: Ensure template target dir exists
+      become: true
+      ansible.builtin.file:
+        path: "{{ foreman_prov_templates_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
     - name: Copy files to remote host
+      become: true
       loop: "{{ foreman_custom_provisioning_templates }}"
       loop_control:
         loop_var: prov_template

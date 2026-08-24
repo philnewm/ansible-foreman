@@ -153,12 +153,13 @@ foreman_custom_partition_tables:
     organizations:
       - "Default Organization"
 
+foreman_prov_templates_path: /etc/prov_templates
 foreman_custom_provisioning_templates:
   - name: "PXEGrub2 custom local boot"
     kind: "PXEGrub2"
     locked: false
     control_node_source: "dummy_pxegrub2_custom_local_boot.erb"
-    file_name: "/tmp/pxegrub2_custom_local_boot"
+    file_name: "{{ foreman_prov_templates_path }}/pxegrub2_custom_local_boot"
     state: "present_with_defaults"
     locations:
       - "Default Location"
@@ -168,7 +169,7 @@ foreman_custom_provisioning_templates:
     kind: "user_data"
     locked: false
     control_node_source: "dummy_preseed_autoinstall_cloud-init_user_data_custom.erb"
-    file_name: "/tmp/preseed_autoinstall_cloud-init_user_data_custom"
+    file_name: "{{ foreman_prov_templates_path }}/preseed_autoinstall_cloud-init_user_data_custom"
     state: "present_with_defaults"
     locations:
       - "Default Location"
@@ -178,7 +179,7 @@ foreman_custom_provisioning_templates:
     kind: "snippet"
     locked: false
     control_node_source: "dummy_preseed_netplan_setup_custom.erb"
-    file_name: "/tmp/preseed_netplan_setup_custom"
+    file_name: "{{ foreman_prov_templates_path }}/preseed_netplan_setup_custom"
     state: "present_with_defaults"
     locations:
       - "Default Location"
@@ -188,7 +189,7 @@ foreman_custom_provisioning_templates:
     kind: "snippet"
     locked: false
     control_node_source: "dummy_preseed_netplan_generic_interface_custom.erb"
-    file_name: "/tmp/preseed_netplan_generic_interface_custom"
+    file_name: "{{ foreman_prov_templates_path }}/preseed_netplan_generic_interface_custom"
     state: "present_with_defaults"
     locations:
       - "Default Location"
@@ -203,7 +204,7 @@ foreman_job_templates:
     job_category: "Ansible Playbook"
     snippet: false
     control_node_source: "custom_vars_playbook.yml.j2"
-    file_name: "/tmp/custom_vars_playbook.yml"
+    file_name: "{{ foreman_prov_templates_path }}/custom_vars_playbook.yml"
     remote_exec_feature_id: "3"  # 'Run Ansible roles'
 
 foreman_install_media:

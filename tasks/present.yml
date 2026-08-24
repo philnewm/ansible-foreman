@@ -2,7 +2,7 @@
 
 - name: Check if Foreman is running by calling API
   ansible.builtin.uri:
-    url: "https://{{ foreman_host_name }}:{{ foreman_server_ssl_port }}/api/statuses"
+    url: "{{ foreman_server_url }}/api/statuses"
     method: GET
     user: "{{ foreman_default_user }}"
     password: "{{ foreman_default_password }}"
@@ -16,6 +16,10 @@
 - name: Extract Foreman version
   ansible.builtin.set_fact:
     installed_foreman_version: "{{ foreman_api.json.results.foreman.version | default('') }}"
+
+- name: Display foreman version
+  ansible.builtin.debug:
+    var: installed_foreman_version
 
 - name: Include requirements
   ansible.builtin.include_tasks:
@@ -69,7 +73,6 @@
     regexp: '^:enabled:'
     line: ':enabled: false'
     create: true
-    backrefs: true
     owner: "foreman-proxy"
     group: "root"
     mode: "0640"

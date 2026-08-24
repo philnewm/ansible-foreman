@@ -116,6 +116,7 @@ foreman_ansible_python_venv_path: "/etc/ansible/ansible_venv"
 foreman_ansible_vars_files:
   - name: "dummy_local_users_vars.yml"
     dest: "{{ foreman_ansible_root_dir }}/local_users_vars.yml"
+    auto_include: true
 foreman_ansible_config_options:
   - key: "roles_path"
     value: "{{ foreman_ansible_roles_dir }}"

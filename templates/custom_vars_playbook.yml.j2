@@ -3,7 +3,9 @@
 - hosts: all
   vars_files:
 {% for vars_file in foreman_ansible_vars_files %}
+{% if vars_file.auto_include | default(false) %}
     - "{{ vars_file.dest }}"
+{% endif %}
 {% endfor %}
 {% raw %}
   pre_tasks:

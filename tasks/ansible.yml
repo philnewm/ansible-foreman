@@ -121,16 +121,11 @@
       register: requirements_contents
 
     - name: Build combined requirements list
+      loop: "{{ requirements_contents.results }}"
+      loop_control:
+        label: "{{ item.source }}"
       ansible.builtin.set_fact:
-        combined_requirements: >-
-          {{
-            requirements_contents.results
-            | map(attribute='content')
-            | map('b64decode')
-            | map('split', '\n')
-            | list
-            | flatten
-          }}
+        combined_requirements: "{{ combined_requirements | default([]) + (item.content | b64decode).splitlines() }}"
 
     - name: Install python requirements into ansible venv
       become: true

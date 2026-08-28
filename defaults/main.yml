@@ -4,6 +4,7 @@ state: "present"
 
 foreman_version: "3.19.1"
 foreman_puppet_version: 8
+foreman_vars_file: ""
 
 # https://releases.ubuntu.com/24.04/netboot/amd64/
 # https://community.theforeman.org/t/how-to-provision-ubuntu-22-04-or-24-04/42690

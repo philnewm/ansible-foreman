@@ -198,16 +198,16 @@ foreman_custom_provisioning_templates:
     organizations:
       - "Default Organization"
 
-foreman_job_templates:
-  - name: "Ansible Roles - Custom vars"
-    description: "Run Ansible custom vars playbook"
-    audit_comment: "Add custom vars playbook"
-    provider_type: "Ansible"
-    job_category: "Ansible Playbook"
-    snippet: false
-    control_node_source: "custom_vars_playbook.yml.j2"
-    file_name: "{{ foreman_prov_templates_path }}/custom_vars_playbook.yml"
-    remote_exec_feature_id: "3"  # 'Run Ansible roles'
+# foreman_job_templates:
+#   - name: "Ansible Roles - Custom vars"
+#     description: "Run Ansible custom vars playbook"
+#     audit_comment: "Add custom vars playbook"
+#     provider_type: "Ansible"
+#     job_category: "Ansible Playbook"
+#     snippet: false
+#     control_node_source: "custom_vars_playbook.yml.j2"
+#     file_name: "{{ foreman_prov_templates_path }}/custom_vars_playbook.yml"
+#     remote_exec_feature_id: "3"  # 'Run Ansible roles'
 
 foreman_install_media:
   - name: "AlmaLinux"

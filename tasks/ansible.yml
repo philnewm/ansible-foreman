@@ -120,12 +120,17 @@
         path: "{{ requirement_file.path }}"
       register: requirements_contents
 
+    - name: Initialise combined requirements
+      ansible.builtin.set_fact:
+        combined_requirements: []
+
     - name: Build combined requirements list
       loop: "{{ requirements_contents.results }}"
       loop_control:
         label: "{{ item.source }}"
       ansible.builtin.set_fact:
-        combined_requirements: "{{ combined_requirements | default([]) + (item.content | b64decode).splitlines() }}"
+        combined_requirements: >-
+          {{ combined_requirements + (item.content | b64decode).splitlines() }}
 
     - name: Install python requirements into ansible venv
       become: true

@@ -1,5 +1,10 @@
 ---
 
+- name: Include vars file if provided
+  when: foreman_vars_file | length > 0
+  ansible.builtin.include_vars:
+    file: "{{ foreman_vars_file }}"
+
 - name: Check if Foreman is running by calling API
   ansible.builtin.uri:
     url: "{{ foreman_server_url }}/api/statuses"
@@ -20,11 +25,6 @@
 - name: Display foreman version
   ansible.builtin.debug:
     var: installed_foreman_version
-
-- name: Include vars file if provided
-  when: foreman_vars_file | length > 0
-  ansible.builtin.include_vars:
-    file: "{{ foreman_vars_file }}"
 
 - name: Include requirements
   ansible.builtin.include_tasks:

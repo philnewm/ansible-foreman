@@ -30,6 +30,11 @@
   ansible.builtin.include_tasks:
     file: "repo_setup.yml"
 
+- name: Prepare freeipa realm
+  when: foreman_freeipa_realm_enabled
+  ansible.builtin.include_tasks:
+    file: freeipa_realm.yml
+
 - name: Include install
   when: installed_foreman_version != foreman_version
   ansible.builtin.include_tasks:

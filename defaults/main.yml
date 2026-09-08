@@ -20,6 +20,11 @@ foreman_fw_allowed_ports:
   - 8000/tcp  # httpboot
   - 8443/tcp  # remote execution access using dynflow/ansible
 
+foreman_freeipa_realm_enabled: false
+foreman_freeipa_admin_principal: "admin"
+foreman_freeipa_realm_proxy_user: "realm-proxy"
+foreman_freeipa_keytab_path: "/etc/foreman-proxy/freeipa.keytab"
+
 foreman_host_name: "{{ inventory_hostname }}"
 foreman_default_user: "admin"
 foreman_default_password: "admin"

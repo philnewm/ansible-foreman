@@ -148,25 +148,27 @@ foreman_settings:
   - name: "local_boot_PXEGrub2"
     value: "PXEGrub2 custom local boot"
 
+foreman_templates_path: "/var/lib/foreman_templates"
+foreman_custom_partition_tables_path: "{{ foreman_templates_path }}/patition_tables"
 foreman_custom_partition_tables:
   - name: "Preseed default autoinstall full disk"
     locked: false
     os_family: "Debian"
     control_node_source: "dummy_preseed_default_autoinstall_full_disk.erb"
-    file_name: "/tmp/preseed_default_autoinstall_full_disk"
+    file_name: "{{ foreman_custom_partition_tables_path }}/preseed_default_autoinstall_full_disk"
     state: "present_with_defaults"
     locations:
       - "Default Location"
     organizations:
       - "Default Organization"
 
-foreman_prov_templates_path: /etc/prov_templates
+foreman_custom_provisioning_templates_path: "{{ foreman_templates_path }}/provisioning_templates"
 foreman_custom_provisioning_templates:
   - name: "PXEGrub2 custom local boot"
     kind: "PXEGrub2"
     locked: false
     control_node_source: "dummy_pxegrub2_custom_local_boot.erb"
-    file_name: "{{ foreman_prov_templates_path }}/pxegrub2_custom_local_boot"
+    file_name: "{{ foreman_custom_provisioning_templates_path }}/pxegrub2_custom_local_boot"
     state: "present_with_defaults"
     locations:
       - "Default Location"
@@ -176,7 +178,7 @@ foreman_custom_provisioning_templates:
     kind: "user_data"
     locked: false
     control_node_source: "dummy_preseed_autoinstall_cloud-init_user_data_custom.erb"
-    file_name: "{{ foreman_prov_templates_path }}/preseed_autoinstall_cloud-init_user_data_custom"
+    file_name: "{{ foreman_custom_provisioning_templates_path }}/preseed_autoinstall_cloud-init_user_data_custom"
     state: "present_with_defaults"
     locations:
       - "Default Location"
@@ -186,7 +188,7 @@ foreman_custom_provisioning_templates:
     kind: "snippet"
     locked: false
     control_node_source: "dummy_preseed_netplan_setup_custom.erb"
-    file_name: "{{ foreman_prov_templates_path }}/preseed_netplan_setup_custom"
+    file_name: "{{ foreman_custom_provisioning_templates_path }}/preseed_netplan_setup_custom"
     state: "present_with_defaults"
     locations:
       - "Default Location"
@@ -196,14 +198,15 @@ foreman_custom_provisioning_templates:
     kind: "snippet"
     locked: false
     control_node_source: "dummy_preseed_netplan_generic_interface_custom.erb"
-    file_name: "{{ foreman_prov_templates_path }}/preseed_netplan_generic_interface_custom"
+    file_name: "{{ foreman_custom_provisioning_templates_path }}/preseed_netplan_generic_interface_custom"
     state: "present_with_defaults"
     locations:
       - "Default Location"
     organizations:
       - "Default Organization"
 
-# foreman_job_templates:
+# foreman_custom_job_templates_path: "{{ foreman_templates_path }}/job_templates"
+# foreman_custom_job_templates:
 #   - name: "Ansible Roles - Custom vars"
 #     description: "Run Ansible custom vars playbook"
 #     audit_comment: "Add custom vars playbook"
@@ -211,7 +214,7 @@ foreman_custom_provisioning_templates:
 #     job_category: "Ansible Playbook"
 #     snippet: false
 #     control_node_source: "custom_vars_playbook.yml.j2"
-#     file_name: "{{ foreman_prov_templates_path }}/custom_vars_playbook.yml"
+#     file_name: "{{ foreman_custom_job_templates_path }}/custom_vars_playbook.yml"
 #     remote_exec_feature_id: "3"  # 'Run Ansible roles'
 
 foreman_install_media:

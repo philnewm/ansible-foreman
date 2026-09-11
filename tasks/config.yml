@@ -23,6 +23,15 @@
 - name: Import partition tables
   when: foreman_custom_partition_tables is defined
   block:
+    - name: Ensure template target dir exists
+      become: true
+      ansible.builtin.file:
+        path: "{{ foreman_custom_partition_tables_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
     - name: Copy files to remote host
       loop: "{{ foreman_custom_partition_tables }}"
       loop_control:
@@ -57,7 +66,7 @@
     - name: Ensure template target dir exists
       become: true
       ansible.builtin.file:
-        path: "{{ foreman_prov_templates_path }}"
+        path: "{{ foreman_custom_provisioning_templates_path }}"
         state: directory
         owner: root
         group: root
@@ -96,8 +105,17 @@
 - name: Import job templates
   when: foreman_job_templates is defined
   block:
+    - name: Ensure template target dir exists
+      become: true
+      ansible.builtin.file:
+        path: "{{ foreman_custom_job_templates_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
     - name: Copy files to remote host
-      loop: "{{ foreman_job_templates }}"
+      loop: "{{ foreman_custom_job_templates }}"
       loop_control:
         label: "{{ item.name }}"
       ansible.builtin.template:
@@ -106,7 +124,7 @@
         mode: "0644"
 
     - name: Add custom job templates
-      loop: "{{ foreman_job_templates }}"
+      loop: "{{ foreman_custom_job_templates }}"
       loop_control:
         label: "{{ item.name }}"
       theforeman.foreman.job_template:
@@ -154,7 +172,7 @@
           }}
 
     - name: Update remote execution features if required
-      loop: "{{ foreman_job_templates }}"
+      loop: "{{ foreman_custom_job_templates }}"
       loop_control:
         label: "{{ item.name }}"
       when:

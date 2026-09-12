@@ -28,8 +28,8 @@
       ansible.builtin.file:
         path: "{{ foreman_custom_partition_tables_path }}"
         state: directory
-        owner: root
-        group: root
+        owner: foreman-proxy
+        group: foreman-proxy
         mode: "0755"
 
     - name: Copy files to remote host
@@ -68,8 +68,8 @@
       ansible.builtin.file:
         path: "{{ foreman_custom_provisioning_templates_path }}"
         state: directory
-        owner: root
-        group: root
+        owner: foreman-proxy
+        group: foreman-proxy
         mode: "0755"
 
     - name: Copy files to remote host
@@ -110,8 +110,8 @@
       ansible.builtin.file:
         path: "{{ foreman_custom_job_templates_path }}"
         state: directory
-        owner: root
-        group: root
+        owner: foreman-proxy
+        group: foreman-proxy
         mode: "0755"
 
     - name: Copy files to remote host

@@ -6,6 +6,21 @@
     name: "{{ foreman_system_python_packages[ansible_facts.os_family | lower] }}"
     state: present
 
+- name: Assign global parameters
+  loop: "{{ foreman_global_params }}"
+  loop_control:
+    loop_var: global_param
+    label: "{{ global_param.name }}"
+  theforeman.foreman.global_parameter:
+    name: "{{ global_param.name }}"
+    parameter_type: "{{ global_param.parameter_type }}"
+    value: "{{ global_param.value }}"
+    state: present
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "{{ foreman_server_url }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+
 - name: Create realms
   loop: "{{ foreman_realms | default([]) }}"
   loop_control:
@@ -16,21 +31,6 @@
     name: "{{ realm.name }}"
     realm_proxy: "{{ realm.proxy }}"
     realm_type: "{{ realm.type }}"
-    state: present
-    validate_certs: "{{ foreman_cert_validation }}"
-    server_url: "{{ foreman_server_url }}"
-    username: "{{ foreman_default_user }}"
-    password: "{{ foreman_default_password }}"
-
-- name: Assign global parameters
-  loop: "{{ foreman_global_params }}"
-  loop_control:
-    loop_var: global_param
-    label: "{{ global_param.name }}"
-  theforeman.foreman.global_parameter:
-    name: "{{ global_param.name }}"
-    parameter_type: "{{ global_param.parameter_type }}"
-    value: "{{ global_param.value }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
     server_url: "{{ foreman_server_url }}"
@@ -336,6 +336,7 @@
     name: "{{ host_group.name }}"
     description: "{{ host_group.description | default(omit) }}"
     parent: "{{ host_group.parent | default(omit) }}"
+    realm: "{{ host_group.realm | default(omit) }}"
     environment: "{{ host_group.environment | default(omit) }}"
     puppet_proxy: "{{ host_group.puppet_proxy | default(omit) }}"
     puppet_ca_proxy: "{{ host_group.puppet_ca_proxy | default(omit) }}"
@@ -377,6 +378,7 @@
   theforeman.foreman.host:
     name: "{{ item.name }}"
     domain: "{{ item.domain | default(omit) }}"
+    realm: "{{ item.realm | default(omit) }}"
     organization: "{{ item.organization }}"
     location: "{{ item.location }}"
     hostgroup: "{{ item.hostgroup | default(omit) }}"

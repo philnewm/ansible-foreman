@@ -6,14 +6,31 @@
     name: "{{ foreman_system_python_packages[ansible_facts.os_family | lower] }}"
     state: present
 
+- name: Create realms
+  loop: "{{ foreman_realms | default([]) }}"
+  loop_control:
+    loop_var: realm
+    label: "{{ realm.name }}"
+  when: foreman_realms is defined
+  theforeman.foreman.realm:
+    name: "{{ realm.name }}"
+    realm_proxy: "{{ realm.proxy }}"
+    realm_type: "{{ realm.type }}"
+    state: present
+    validate_certs: "{{ foreman_cert_validation }}"
+    server_url: "{{ foreman_server_url }}"
+    username: "{{ foreman_default_user }}"
+    password: "{{ foreman_default_password }}"
+
 - name: Assign global parameters
   loop: "{{ foreman_global_params }}"
   loop_control:
-    label: "{{ item.name }}"
+    loop_var: global_param
+    label: "{{ global_param.name }}"
   theforeman.foreman.global_parameter:
-    name: "{{ item.name }}"
-    parameter_type: "{{ item.parameter_type }}"
-    value: "{{ item.value }}"
+    name: "{{ global_param.name }}"
+    parameter_type: "{{ global_param.parameter_type }}"
+    value: "{{ global_param.value }}"
     state: present
     validate_certs: "{{ foreman_cert_validation }}"
     server_url: "{{ foreman_server_url }}"
@@ -191,7 +208,7 @@
       changed_when: '"Remote execution feature updated" in result.stdout'
 
 - name: "Create Installation Media"
-  loop: "{{ foreman_install_media }}"
+  loop: "{{ foreman_install_media | default([]) }}"
   loop_control:
     label: "{{ item.name }}"
   theforeman.foreman.installation_medium:
@@ -207,7 +224,7 @@
     password: "{{ foreman_default_password }}"
 
 - name: "Create Operating Systems"
-  loop: "{{ foreman_oss }}"
+  loop: "{{ foreman_oss | default([]) }}"
   loop_control:
     label: "{{ item.description }}"
   theforeman.foreman.operatingsystem:
@@ -248,7 +265,7 @@
     password: "{{ foreman_default_password }}"
 
 - name: Set provisioning templates
-  loop: "{{ foreman_provisioning_templates }}"
+  loop: "{{ foreman_provisioning_templates | default([]) }}"
   loop_control:
     loop_var: prov_template
     label: "{{ prov_template.template_name }}"
@@ -280,7 +297,7 @@
     password: "{{ foreman_default_password }}"
 
 - name: "Create Subnets"
-  loop: "{{ foreman_subnets }}"
+  loop: "{{ foreman_subnets | default([]) }}"
   loop_control:
     label: "{{ item.name }}"
   theforeman.foreman.subnet:
@@ -311,7 +328,7 @@
     password: "{{ foreman_default_password }}"
 
 - name: Create host groups
-  loop: "{{ foreman_host_groups }}"
+  loop: "{{ foreman_host_groups | default([]) }}"
   loop_control:
     loop_var: host_group
     label: "{{ host_group.name }}"
@@ -354,7 +371,7 @@
     existing_hostnames: "{{ present_hosts.hosts | map(attribute='name') | list }}"
 
 - name: Create hosts
-  loop: "{{ foreman_hosts }}"
+  loop: "{{ foreman_hosts | default([]) }}"
   loop_control:
     label: "{{ item.name }}"
   theforeman.foreman.host:
@@ -387,7 +404,7 @@
     password: "{{ foreman_default_password }}"
 
 - name: Configure settings
-  loop: "{{ foreman_settings }}"
+  loop: "{{ foreman_settings | default([]) }}"
   loop_control:
     loop_var: setting
     label: "{{ setting.name }}"

@@ -120,7 +120,7 @@
         password: "{{ foreman_default_password }}"
 
 - name: Import job templates
-  when: foreman_job_templates is defined
+  when: foreman_custom_job_templates is defined
   block:
     - name: Ensure template target dir exists
       become: true

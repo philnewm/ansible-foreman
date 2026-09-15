@@ -57,6 +57,8 @@
       ansible.builtin.copy:
         src: "{{ part_table.control_node_source }}"
         dest: "{{ part_table.file_name }}"
+        owner: foreman-proxy
+        group: foreman-proxy
         mode: '0644'
 
     - name: Import partition tables
@@ -98,6 +100,8 @@
       ansible.builtin.copy:
         src: "{{ prov_template.control_node_source }}"
         dest: "{{ prov_template.file_name }}"
+        owner: foreman-proxy
+        group: foreman-proxy
         mode: '0644'
       register: template_copy
 
@@ -132,12 +136,15 @@
         mode: "0755"
 
     - name: Copy files to remote host
+      become: true
       loop: "{{ foreman_custom_job_templates }}"
       loop_control:
         label: "{{ item.name }}"
-      ansible.builtin.template:
+      ansible.builtin.copy:
         src: "{{ item.control_node_source }}"
         dest: "{{ item.file_name }}"
+        owner: foreman-proxy
+        group: foreman-proxy
         mode: "0644"
 
     - name: Add custom job templates

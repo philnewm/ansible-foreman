@@ -50,6 +50,7 @@
         mode: "0755"
 
     - name: Copy files to remote host
+      become: true
       loop: "{{ foreman_custom_partition_tables }}"
       loop_control:
         loop_var: part_table

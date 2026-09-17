@@ -88,6 +88,11 @@
     mode: "0640"
   notify: Restart foreman-proxy
 
+- name: Setup certifiacte
+  when: foreman_certificate
+  ansible.builtin.include_tasks:
+    file: certificate_setup.yml
+
 - name: Set up ansible
   when: foreman_setup_ansible
   ansible.builtin.include_tasks:

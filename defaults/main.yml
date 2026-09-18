@@ -25,6 +25,7 @@ foreman_freeipa_admin_principal: "admin"
 foreman_freeipa_realm_proxy_user: "realm-proxy"
 foreman_freeipa_keytab_path: "/etc/foreman-proxy/freeipa.keytab"
 
+foreman_certificate: false
 foreman_host_name: "{{ inventory_hostname }}"
 foreman_default_user: "admin"
 foreman_default_password: "admin"
